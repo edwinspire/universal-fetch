@@ -1,0 +1,27 @@
+{
+  "name": "universal-fetch",
+  "description": "Class to use fetch in Nodejs and in the browser",
+  "version": "1.0.0",
+  "author": "edwinspire <edwinspire@gmail.com>",
+  "contributors": [
+    "edwinspire"
+  ],
+  "tags": [
+    "fetch",
+    "node",
+    "browser"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/edwinspire/universal-fetch"
+  },
+  "bugs": {
+    "url": "https://github.com/edwinspire/universal-fetch/issues"
+  },
+  "main": "fetch.js",
+  "dependencies": {
+    "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {},
+  "optionalDependencies": {}
+}
