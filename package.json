@@ -18,7 +18,7 @@
   "bugs": {
     "url": "https://github.com/edwinspire/universal-fetch/issues"
   },
-  "main": "fetch.js",
+  "main": "src/fetch.js",
   "dependencies": {
     "node-fetch": "^2.6.1"
   },
