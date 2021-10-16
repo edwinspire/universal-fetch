@@ -11,6 +11,9 @@
     "node",
     "browser"
   ],
+  "scripts": {
+    "dev": "node ./test-ufetch.js"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/edwinspire/universal-fetch"

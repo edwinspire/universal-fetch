@@ -1,7 +1,7 @@
 "use strict";
 const fetch = process.browser ? window.fetch : require("node-fetch").default;
 
-module.exports = class FetchData {
+module.exports = class uFetch {
   constructor(redirect_in_unauthorized) {
     this._redirect_in_unauthorized_internal = redirect_in_unauthorized;
     this._basic_authentication = {};
@@ -14,6 +14,7 @@ module.exports = class FetchData {
     } else {
       this._basic_authentication = undefined;
     }
+    return this;
   }
 
   _addBasicAuthentication(headers) {
