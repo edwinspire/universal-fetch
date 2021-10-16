@@ -1,9 +1,26 @@
-'use strict';
+"use strict";
 const fetch = process.browser ? window.fetch : require("node-fetch").default;
 
 module.exports = class FetchData {
   constructor(redirect_in_unauthorized) {
     this._redirect_in_unauthorized_internal = redirect_in_unauthorized;
+    this._basic_authentication = {};
+  }
+
+  SetBasicAuthentication(user, password) {
+    if (user && password) {
+      this._basic_authentication =
+        "Basic " + Buffer.from(user + ":" + password).toString("base64");
+    } else {
+      this._basic_authentication = undefined;
+    }
+  }
+
+  _addBasicAuthentication(headers) {
+    if (this._basic_authentication) {
+      headers.Authorization = this._basic_authentication;
+    }
+    return headers;
   }
 
   async put(url, data, headers) {
@@ -14,6 +31,8 @@ module.exports = class FetchData {
         "Content-Type": "application/json",
       };
     }
+
+    headers = this._addBasicAuthentication(headers);
 
     try {
       let response = await fetch(url, {
@@ -41,6 +60,7 @@ module.exports = class FetchData {
         "Content-Type": "application/json",
       };
     }
+    headers = this._addBasicAuthentication(headers);
     try {
       let response = await fetch(url, {
         method: "DELETE",
@@ -67,6 +87,7 @@ module.exports = class FetchData {
         "Content-Type": "application/json",
       };
     }
+    headers = this._addBasicAuthentication(headers);
     try {
       response = await fetch(url, {
         method: "POST",
@@ -93,6 +114,7 @@ module.exports = class FetchData {
         "Content-Type": "application/json",
       };
     }
+    headers = this._addBasicAuthentication(headers);
     try {
       let searchURL = new URLSearchParams(query);
       let urlq = url + "?" + searchURL.toString();
@@ -109,4 +131,4 @@ module.exports = class FetchData {
       throw err;
     }
   }
-}
+};
