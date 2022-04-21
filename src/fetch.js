@@ -50,9 +50,12 @@ module.exports = class uFetch {
   }
 
   async request(url, params) {
-    let data_query = params.query || {};
-    let data_body = params.body || {};
+    console.log(params);
+
+    let data_query = params.query;
+    let data_body = params.body;
     let response;
+    let req_params = {};
     if (!params.headers) {
       params.headers = {
         "Content-Type": "application/json",
@@ -63,20 +66,31 @@ module.exports = class uFetch {
       params.method = "GET";
     }
 
-if((params.method == 'GET' || params.method == 'HEAD') && data_body){
-  data_body = null;
-}
+    if (params.method === "GET" || params.method === "HEAD") {
+      req_params = {
+        method: params.method.toString().toUpperCase(),
+        // body: JSON.stringify(data_body),
+        headers: params.headers,
+      };
+    } else {
+      req_params = {
+        method: params.method.toString().toUpperCase(),
+        body: JSON.stringify(data_body),
+        headers: params.headers,
+      };
+    }
 
     params.headers = this._addBasicAuthentication(params.headers);
+
     try {
       let searchURL = new URLSearchParams(data_query);
       let urlq = url + "?" + searchURL.toString();
 
-      response = await fetch(urlq, {
-        method: params.method.toString().toUpperCase(),
-        body: JSON.stringify(data_body),
-        headers: params.headers,
-      });
+      if (searchURL.toString().length == 0) {
+        urlq = url;
+      }
+
+      response = await fetch(urlq, req_params);
       //cache.put(event.request, response.clone());
       if (this._redirect_in_unauthorized && response.status == 401) {
         window.location.href = this._redirect_in_unauthorized;
@@ -84,7 +98,7 @@ if((params.method == 'GET' || params.method == 'HEAD') && data_body){
 
       return response;
     } catch (err) {
-      console.log(err);
+      console.trace(err);
       //const response = await cache.match(event.request);
       if (response) return response;
       throw err;
