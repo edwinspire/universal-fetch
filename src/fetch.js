@@ -63,6 +63,10 @@ module.exports = class uFetch {
       params.method = "GET";
     }
 
+if((params.method == 'GET' || params.method == 'HEAD') && data_body){
+  data_body = null;
+}
+
     params.headers = this._addBasicAuthentication(params.headers);
     try {
       let searchURL = new URLSearchParams(data_query);
