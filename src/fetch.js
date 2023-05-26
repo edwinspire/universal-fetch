@@ -11,7 +11,7 @@ if (typeof window !== "undefined") {
   fetchData = fetch;
 }
 
-module.exports = class uFetch {
+export default class uFetch {
   constructor(redirect_in_unauthorized) {
     this._redirect_in_unauthorized_internal = redirect_in_unauthorized;
     this._basic_authentication = {};
