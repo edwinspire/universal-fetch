@@ -121,7 +121,6 @@ export default class uFetch {
 
   async request(url, method, data, headers) {
     let response;
-
     let m = method ? method.toUpperCase() : "GET";
     let u = url && url.length > 0 ? url : this.url;
 
@@ -213,4 +212,4 @@ export default class uFetch {
   async patch(url, data, headers) {
     return this.request(url, "PATCH", data, headers);
   }
-};
+}

@@ -13,7 +13,7 @@
     "browser"
   ],
   "scripts": {
-    "dev": "node ./test-ufetch.js"
+    "test": "node ./test-ufetch.js"
   },
   "repository": {
     "type": "git",
