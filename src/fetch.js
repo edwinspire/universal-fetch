@@ -1,5 +1,15 @@
 "use strict";
-const fetch = window ? window.fetch : require("node-fetch").default;
+// const fetch = typeof window !== 'undefined' ? window.fetch : import fetch from 'node-fetch';
+
+import fetch from "node-fetch";
+
+let fetchData;
+
+if (typeof window !== "undefined") {
+  fetchData = window.fetch;
+} else {
+  fetchData = fetch;
+}
 
 module.exports = class uFetch {
   constructor(redirect_in_unauthorized) {
@@ -24,6 +34,7 @@ module.exports = class uFetch {
     return headers;
   }
 
+  /*
   async DELETE(url, init) {
     init.method = "DELETE";
     return this.request(url, init);
@@ -48,7 +59,9 @@ module.exports = class uFetch {
     init.method = "PATCH";
     return this.request(url, init);
   }
+*/
 
+  /*
   async request(url, params) {
     console.log(params);
 
@@ -90,7 +103,7 @@ module.exports = class uFetch {
         urlq = url;
       }
 
-      response = await fetch(urlq, req_params);
+      response = await fetchData(urlq, req_params);
       //cache.put(event.request, response.clone());
       if (this._redirect_in_unauthorized && response.status == 401) {
         window.location.href = this._redirect_in_unauthorized;
@@ -104,9 +117,29 @@ module.exports = class uFetch {
       throw err;
     }
   }
+  */
 
-  async put(url, data, headers) {
+  async request(url, method, data, headers) {
     let response;
+
+    let m = method ? method.toUpperCase() : "GET";
+    let u = url && url.length > 0 ? url : this.url;
+
+    if (
+      !(
+        m == "GET" ||
+        m == "POST" ||
+        m == "HEAD" ||
+        m == "PUT" ||
+        m == "DELETE" ||
+        m == "CONNECT" ||
+        m == "OPTIONS" ||
+        m == "TRACE" ||
+        m == "PATCH"
+      )
+    ) {
+      throw "Invalid method";
+    }
 
     if (!headers) {
       headers = {
@@ -117,11 +150,37 @@ module.exports = class uFetch {
     headers = this._addBasicAuthentication(headers);
 
     try {
-      let response = await fetch(url, {
-        method: "PUT",
-        body: JSON.stringify(data),
-        headers: headers,
-      });
+      switch (m) {
+        case "POST":
+          response = await fetchData(u, {
+            method: m,
+            body: JSON.stringify(data),
+            headers: headers,
+          });
+
+          break;
+
+        case "PUT":
+          response = await fetchData(u, {
+            method: m,
+            body: JSON.stringify(data),
+            headers: headers,
+          });
+
+          break;
+        default:
+          let searchURL = new URLSearchParams(data);
+          u = u + "?" + searchURL.toString();
+
+          response = await fetchData(u, {
+            method: m,
+            //            body: JSON.stringify(data),
+            headers: headers,
+          });
+
+          break;
+      }
+
       if (this._redirect_in_unauthorized && response.status == 401) {
         window.location.href = this._redirect_in_unauthorized;
       }
@@ -133,84 +192,25 @@ module.exports = class uFetch {
       if (response) return response;
       throw err;
     }
+  }
+
+  async put(url, data, headers) {
+    return this.request(url, "PUT", data, headers);
   }
 
   async delete(url, data, headers) {
-    let response;
-    if (!headers) {
-      headers = {
-        "Content-Type": "application/json",
-      };
-    }
-    headers = this._addBasicAuthentication(headers);
-    try {
-      let response = await fetch(url, {
-        method: "DELETE",
-        body: JSON.stringify(data),
-        headers: headers,
-      });
-      if (this._redirect_in_unauthorized && response.status == 401) {
-        window.location.href = this._redirect_in_unauthorized;
-      }
-      //cache.put(event.request, response.clone());
-      return response;
-    } catch (err) {
-      console.log(err);
-      //const response = await cache.match(event.request);
-      if (response) return response;
-      throw err;
-    }
+    return this.request(url, "DELETE", data, headers);
   }
 
   async post(url, data, headers) {
-    let response;
-    if (!headers) {
-      headers = {
-        "Content-Type": "application/json",
-      };
-    }
-    headers = this._addBasicAuthentication(headers);
-    try {
-      response = await fetch(url, {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: headers,
-      });
-      //cache.put(event.request, response.clone());
-      if (this._redirect_in_unauthorized && response.status == 401) {
-        window.location.href = this._redirect_in_unauthorized;
-      }
-
-      return response;
-    } catch (err) {
-      console.log(err);
-      //const response = await cache.match(event.request);
-      if (response) return response;
-      throw err;
-    }
+    return this.request(url, "POST", data, headers);
   }
-  async get(url, query, headers) {
-    let response;
-    if (!headers) {
-      headers = {
-        "Content-Type": "application/json",
-      };
-    }
-    headers = this._addBasicAuthentication(headers);
-    try {
-      let searchURL = new URLSearchParams(query);
-      let urlq = url + "?" + searchURL.toString();
-      response = await fetch(urlq, {
-        method: "GET",
-        headers: headers,
-      });
-      if (this._redirect_in_unauthorized && response.status == 401) {
-        window.location.href = this._redirect_in_unauthorized;
-      }
-      return response;
-    } catch (err) {
-      if (response) return response;
-      throw err;
-    }
+
+  async get(url, data, headers) {
+    return this.request(url, "GET", data, headers);
+  }
+
+  async patch(url, data, headers) {
+    return this.request(url, "PATCH", data, headers);
   }
 };
