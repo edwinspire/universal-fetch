@@ -17,11 +17,13 @@ if (typeof window !== "undefined") {
 export default class uFetch {
   /**
    *
-   * @param {string} redirect_in_unauthorized
+   * @param {string|undefined} url
+   * @param {string|undefined} redirect_in_unauthorized
    */
-  constructor(redirect_in_unauthorized) {
+  constructor(url, redirect_in_unauthorized) {
     this._redirect_in_unauthorized_internal = redirect_in_unauthorized;
     this._basic_authentication = {};
+    this._url = url;
   }
 
   /**
@@ -58,7 +60,7 @@ export default class uFetch {
   async request(url, method, data, headers) {
     let response;
     let m = method ? method.toUpperCase() : "GET";
-    let u = url && url.length > 0 ? url : this.url;
+    let u = url && url.length > 0 ? url : this._url;
 
     if (
       !(
