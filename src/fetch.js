@@ -62,6 +62,8 @@ export default class uFetch {
     let m = method ? method.toUpperCase() : "GET";
     let u = url && url.length > 0 ? url : this._url;
 
+//console.log('000000000> ', m, data);
+
     if (
       !(
         m == "GET" ||
@@ -89,6 +91,7 @@ export default class uFetch {
     try {
       switch (m) {
         case "POST":
+      //    console.log('++++++++++++++++++> POST', data, JSON.stringify(data));
           response = await fetchData(u, {
             method: m,
             body: JSON.stringify(data),
