@@ -1,20 +1,20 @@
 "use strict";
 // const fetch = typeof window !== 'undefined' ? window.fetch : import fetch from 'node-fetch';
-
-import fetch from "node-fetch";
+//import fetch from "node-fetch";
 
 let fetchData;
 
 if (typeof window !== "undefined") {
   fetchData = window.fetch;
 } else {
+  const fetch = require("node-fetch");
   fetchData = fetch;
 }
 
 /**
  *  @description Class to fetch in browsers and nodejs
  */
-export default class uFetch {
+class uFetch {
   /**
    *
    * @param {string|undefined} url
@@ -189,3 +189,6 @@ export default class uFetch {
     return this.request(url, "PATCH", data, headers);
   }
 }
+
+
+module.exports = uFetch;
