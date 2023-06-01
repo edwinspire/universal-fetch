@@ -24,6 +24,7 @@ class uFetch {
     this._redirect_in_unauthorized_internal = redirect_in_unauthorized;
     this._basic_authentication = {};
     this._url = url;
+    this._defaultHeaders =  new Map();
   }
 
   /**
@@ -47,6 +48,10 @@ class uFetch {
       headers.Authorization = this._basic_authentication;
     }
     return headers;
+  }
+
+  addHeader(key, value){
+this._defaultHeaders.set(key, value);
   }
 
   /**
@@ -87,6 +92,11 @@ class uFetch {
     }
 
     headers = this._addBasicAuthentication(headers);
+
+    for (const [key, value] of this._defaultHeaders) {
+      //console.log(`${key} = ${value}`);
+      headers[key] = value;
+    }
 
     try {
       switch (m) {
