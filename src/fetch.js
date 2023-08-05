@@ -114,7 +114,7 @@ class uFetch {
       };
     }
 
-    headers = this._addAuthenticationHeader(headers);
+    headers = this._addAuthorizationHeader(headers);
 
     for (const [key, value] of this._defaultHeaders) {
       //console.log(`${key} = ${value}`);
