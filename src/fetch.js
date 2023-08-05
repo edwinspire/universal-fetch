@@ -63,7 +63,7 @@ class uFetch {
     return this;
   }
 
-  _addBasicAuthentication(headers) {
+  _addAuthenticationHeader(headers) {
     if (this._basic_authentication) {
       headers.Authorization = this._basic_authentication;
     }
@@ -114,7 +114,7 @@ class uFetch {
       };
     }
 
-    headers = this._addBasicAuthentication(headers);
+    headers = this._addAuthenticationHeader(headers);
 
     for (const [key, value] of this._defaultHeaders) {
       //console.log(`${key} = ${value}`);
