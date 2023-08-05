@@ -23,8 +23,9 @@ class uFetch {
   constructor(url, redirect_in_unauthorized) {
     this._redirect_in_unauthorized_internal = redirect_in_unauthorized;
     this._basic_authentication = {};
+    this._bearer_authentication;
     this._url = url;
-    this._defaultHeaders =  new Map();
+    this._defaultHeaders = new Map();
   }
 
   /**
@@ -43,15 +44,37 @@ class uFetch {
     return this;
   }
 
+  setBasicAuthentication(user, password) {
+    if (user && password) {
+      this._basic_authentication =
+        "Basic " + Buffer.from(user + ":" + password).toString("base64");
+    } else {
+      this._basic_authentication = undefined;
+    }
+    return this;
+  }
+
+  setBearerAuthentication(key) {
+    if (key) {
+      this._bearer_authentication = "Bearer " + key;
+    } else {
+      this._bearer_authentication = undefined;
+    }
+    return this;
+  }
+
   _addBasicAuthentication(headers) {
     if (this._basic_authentication) {
       headers.Authorization = this._basic_authentication;
     }
+    if (this._bearer_authentication) {
+      headers.Authorization = this._bearer_authentication;
+    }
     return headers;
   }
 
-  addHeader(key, value){
-this._defaultHeaders.set(key, value);
+  addHeader(key, value) {
+    this._defaultHeaders.set(key, value);
   }
 
   /**
@@ -67,7 +90,7 @@ this._defaultHeaders.set(key, value);
     let m = method ? method.toUpperCase() : "GET";
     let u = url && url.length > 0 ? url : this._url;
 
-//console.log('000000000> ', m, data);
+    //console.log('000000000> ', m, data);
 
     if (
       !(
@@ -101,7 +124,7 @@ this._defaultHeaders.set(key, value);
     try {
       switch (m) {
         case "POST":
-      //    console.log('++++++++++++++++++> POST', data, JSON.stringify(data));
+          //    console.log('++++++++++++++++++> POST', data, JSON.stringify(data));
           response = await fetchData(u, {
             method: m,
             body: JSON.stringify(data),
@@ -199,6 +222,5 @@ this._defaultHeaders.set(key, value);
     return this.request(url, "PATCH", data, headers);
   }
 }
-
 
 module.exports = uFetch;
