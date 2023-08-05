@@ -44,7 +44,7 @@ class uFetch {
     return this;
   }
 
-  setBasicAuthentication(user, password) {
+  setBasicAuthorization(user, password) {
     if (user && password) {
       this._basic_authentication =
         "Basic " + Buffer.from(user + ":" + password).toString("base64");
@@ -54,7 +54,7 @@ class uFetch {
     return this;
   }
 
-  setBearerAuthentication(key) {
+  setBearerAuthorization(key) {
     if (key) {
       this._bearer_authentication = "Bearer " + key;
     } else {
@@ -63,7 +63,7 @@ class uFetch {
     return this;
   }
 
-  _addAuthenticationHeader(headers) {
+  _addAuthorizationHeader(headers) {
     if (this._basic_authentication) {
       headers.Authorization = this._basic_authentication;
     }
