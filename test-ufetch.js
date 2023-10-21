@@ -1,9 +1,9 @@
- import uFetch from  './src/fetch.js';
+const uFetch = require('./src/fetch.js');
 
-let fetch = new  uFetch('https://dog.ceo/api/breeds/image/random');
+let fetch = new uFetch('https://dog.ceo/api/breeds/image/random');
 
-fetch.get(null, {hola: 1}).then((r)=>{
-console.log('Resultado = ', r);
+fetch.get(null, { hola: 1 }).then((r) => {
+    console.log('Resultado = ', r);
 });
 
 

@@ -1,13 +1,8 @@
 "use strict";
 
-import fetch from 'node-fetch';
-
-if (typeof window !== 'undefined' && 'fetch' in window) {
-  // Entorno de navegador, usa window.fetch
-  fetch = window.fetch;
-}
-
-/*
+/**
+ * @type {(((input: RequestInfo | URL, init?: RequestInit | undefined) => Promise<Response>) & ((input: RequestInfo | URL, init?: RequestInit | undefined) => Promise<Response>)) | typeof fetch | ((arg0: string | undefined, arg1: { method: string; body?: string; headers: any; }) => any)}
+ */
 let fetchData;
 
 if (typeof window !== "undefined") {
@@ -16,7 +11,6 @@ if (typeof window !== "undefined") {
   const fetch = require("node-fetch");
   fetchData = fetch;
 }
-*/
 
 /**
  *  @description Class to fetch in browsers and nodejs
@@ -132,7 +126,7 @@ class uFetch {
       switch (m) {
         case "POST":
           //    console.log('++++++++++++++++++> POST', data, JSON.stringify(data));
-          response = await fetch(u, {
+          response = await fetchData(u, {
             method: m,
             body: JSON.stringify(data),
             headers: headers,
@@ -141,7 +135,7 @@ class uFetch {
           break;
 
         case "PUT":
-          response = await fetch(u, {
+          response = await fetchData(u, {
             method: m,
             body: JSON.stringify(data),
             headers: headers,
@@ -152,7 +146,7 @@ class uFetch {
           let searchURL = new URLSearchParams(data);
           u = u + "?" + searchURL.toString();
 
-          response = await fetch(u, {
+          response = await fetchData(u, {
             method: m,
             //            body: JSON.stringify(data),
             headers: headers,
@@ -233,4 +227,4 @@ class uFetch {
 
 }
 
-export default uFetch;
+module.exports = uFetch;
