@@ -1,7 +1,13 @@
 "use strict";
-// const fetch = typeof window !== 'undefined' ? window.fetch : import fetch from 'node-fetch';
-//import fetch from "node-fetch";
 
+import fetch from 'node-fetch';
+
+if (typeof window !== 'undefined' && 'fetch' in window) {
+  // Entorno de navegador, usa window.fetch
+  fetch = window.fetch;
+}
+
+/*
 let fetchData;
 
 if (typeof window !== "undefined") {
@@ -10,6 +16,7 @@ if (typeof window !== "undefined") {
   const fetch = require("node-fetch");
   fetchData = fetch;
 }
+*/
 
 /**
  *  @description Class to fetch in browsers and nodejs
@@ -20,7 +27,7 @@ class uFetch {
    * @param {string|undefined} url
    * @param {string|undefined} redirect_in_unauthorized
    */
-  constructor(url, redirect_in_unauthorized) {
+  constructor(url = undefined, redirect_in_unauthorized = undefined) {
     this._redirect_in_unauthorized_internal = redirect_in_unauthorized;
     this._basic_authentication = {};
     this._bearer_authentication;
@@ -125,7 +132,7 @@ class uFetch {
       switch (m) {
         case "POST":
           //    console.log('++++++++++++++++++> POST', data, JSON.stringify(data));
-          response = await fetchData(u, {
+          response = await fetch(u, {
             method: m,
             body: JSON.stringify(data),
             headers: headers,
@@ -134,7 +141,7 @@ class uFetch {
           break;
 
         case "PUT":
-          response = await fetchData(u, {
+          response = await fetch(u, {
             method: m,
             body: JSON.stringify(data),
             headers: headers,
@@ -145,7 +152,7 @@ class uFetch {
           let searchURL = new URLSearchParams(data);
           u = u + "?" + searchURL.toString();
 
-          response = await fetchData(u, {
+          response = await fetch(u, {
             method: m,
             //            body: JSON.stringify(data),
             headers: headers,
@@ -174,7 +181,7 @@ class uFetch {
    * @param {any | undefined} headers
    * @returns {Promise}
    */
-  async put(url, data, headers) {
+  async put(url = undefined, data = undefined, headers = undefined) {
     return this.request(url, "PUT", data, headers);
   }
 
@@ -185,7 +192,7 @@ class uFetch {
    * @param {any | undefined} headers
    * @returns {Promise}
    */
-  async delete(url, data, headers) {
+  async delete(url = undefined, data = undefined, headers = undefined) {
     return this.request(url, "DELETE", data, headers);
   }
 
@@ -196,7 +203,7 @@ class uFetch {
    * @param {any | undefined} headers
    * @returns {Promise}
    */
-  async post(url, data, headers) {
+  async post(url = undefined, data = undefined, headers = undefined) {
     return this.request(url, "POST", data, headers);
   }
 
@@ -207,9 +214,10 @@ class uFetch {
    * @param {any | undefined} headers
    * @returns {Promise}
    */
-  async get(url, data, headers) {
+  async get(url = undefined, data = undefined, headers = undefined) {
     return this.request(url, "GET", data, headers);
   }
+
 
   /**
    *
@@ -218,9 +226,11 @@ class uFetch {
    * @param {any | undefined} headers
    * @returns {Promise}
    */
-  async patch(url, data, headers) {
+  async patch(url = undefined, data = undefined, headers = undefined) {
     return this.request(url, "PATCH", data, headers);
   }
+
+
 }
 
-module.exports = uFetch;
+export default uFetch;

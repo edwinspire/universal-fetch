@@ -1,8 +1,8 @@
  import uFetch from  './src/fetch.js';
 
-let fetch = new  uFetch();
+let fetch = new  uFetch('https://dog.ceo/api/breeds/image/random');
 
-fetch.get('https://dog.ceo/api/breeds/image/random').then((r)=>{
+fetch.get(null, {hola: 1}).then((r)=>{
 console.log('Resultado = ', r);
 });
 

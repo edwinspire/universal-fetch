@@ -3,7 +3,7 @@
   "description": "Class to use fetch in Nodejs and in the browser",
   "version": "1.0.0",
   "author": "edwinspire <edwinspire@gmail.com>",
-  "type": "commonjs",
+  "type": "module",
   "contributors": [
     "edwinspire"
   ],
@@ -24,7 +24,7 @@
   },
   "main": "src/fetch.js",
   "dependencies": {
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^2.7.0"
   },
   "devDependencies": {},
   "optionalDependencies": {}
