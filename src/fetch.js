@@ -45,6 +45,7 @@ class uFetch {
     return this;
   }
 
+  /*
   setBasicAuthorization(user, password) {
     if (user && password) {
       this._basic_authentication =
@@ -54,6 +55,7 @@ class uFetch {
     }
     return this;
   }
+  */
 
   setBearerAuthorization(key) {
     if (key) {
@@ -89,7 +91,7 @@ class uFetch {
   async request(url, method, data, headers) {
     let response;
     let m = method ? method.toUpperCase() : "GET";
-    let u = url && url.length > 0 ? url : this._url;
+    let u = url ?? this._url;
 
     //console.log('000000000> ', m, data);
 
@@ -179,6 +181,10 @@ class uFetch {
     return this.request(url, "PUT", data, headers);
   }
 
+  async PUT(opts) {
+    return this.request(opts.url, "PUT", opts.data, opts.headers);
+  }
+
   /**
    *
    * @param {string | undefined} url
@@ -188,6 +194,10 @@ class uFetch {
    */
   async delete(url = undefined, data = undefined, headers = undefined) {
     return this.request(url, "DELETE", data, headers);
+  }
+
+  async DELETE(opts) {
+    return this.request(opts.url, "DELETE", opts.data, opts.headers);
   }
 
   /**
@@ -201,6 +211,10 @@ class uFetch {
     return this.request(url, "POST", data, headers);
   }
 
+  async POST(opts) {
+    return this.request(opts.url, "POST", opts.data, opts.headers);
+  }
+
   /**
    *
    * @param {string | undefined} url
@@ -212,6 +226,9 @@ class uFetch {
     return this.request(url, "GET", data, headers);
   }
 
+  async GET(opts) {
+    return this.request(opts.url, "GET", opts.data, opts.headers);
+  }
 
   /**
    *
@@ -224,7 +241,9 @@ class uFetch {
     return this.request(url, "PATCH", data, headers);
   }
 
-
+  async PATCH(opts) {
+    return this.request(opts.url, "PATCH", opts.data, opts.headers);
+  }
 }
 
 module.exports = uFetch;
