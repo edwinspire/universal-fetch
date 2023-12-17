@@ -91,7 +91,7 @@ class uFetch {
   async request(url, method, data, headers) {
     let response;
     let m = method ? method.toUpperCase() : "GET";
-    let u = url ?? this._url;
+    let u = url || this._url;
 
     //console.log('000000000> ', m, data);
 
