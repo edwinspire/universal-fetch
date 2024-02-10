@@ -23,7 +23,7 @@ class uFetch {
    */
   constructor(url = undefined, redirect_in_unauthorized = undefined) {
     this._redirect_in_unauthorized_internal = redirect_in_unauthorized;
-    this._basic_authentication = {};
+    this._basic_authentication;
     this._bearer_authentication;
     this._url = url;
     this._defaultHeaders = new Map();
