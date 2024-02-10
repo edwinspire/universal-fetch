@@ -138,7 +138,7 @@ class uFetch {
 
 
     let existsContentType = false;
-    for (const [key, value] of headers) {
+    for (const [key, value] of Object.entries(headers)) {
     
       if (!existsContentType && key.toUpperCase() == 'Content-Type'.toUpperCase()) {
         existsContentType = true;
