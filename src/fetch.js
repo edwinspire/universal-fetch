@@ -35,14 +35,19 @@ class uFetch {
    * @param {string} password
    * @returns
    */
-  SetBasicAuthentication(user, password) {
+  SetBasicAuthorization(user, password) {
     if (user && password) {
       this._basic_authentication =
         "Basic " + Buffer.from(user + ":" + password).toString("base64");
+      this._bearer_authentication = undefined;
     } else {
       this._basic_authentication = undefined;
     }
-    return this;
+    return this; // 
+  }
+
+  SetBasicAuthentication(user, password) {
+    return this.SetBasicAuthorization(user, password);
   }
 
   /*
@@ -60,6 +65,7 @@ class uFetch {
   setBearerAuthorization(key) {
     if (key) {
       this._bearer_authentication = "Bearer " + key;
+      this._basic_authentication = undefined;
     } else {
       this._bearer_authentication = undefined;
     }
@@ -69,9 +75,10 @@ class uFetch {
   _addAuthorizationHeader(headers) {
     if (this._basic_authentication) {
       headers.Authorization = this._basic_authentication;
-    }
-    if (this._bearer_authentication) {
+    } else if (this._bearer_authentication) {
       headers.Authorization = this._bearer_authentication;
+    } else {
+      delete headers.Authorization;
     }
     return headers;
   }
@@ -88,7 +95,7 @@ class uFetch {
    * @param {any | undefined} headers
    * @returns {Promise}
    */
-  async request(url, method, data, headers) {
+  async request(url, method, data, headers = {}) {
     let response;
     let m = method ? method.toUpperCase() : "GET";
     let u = url || this._url;
@@ -123,6 +130,8 @@ class uFetch {
       //console.log(`${key} = ${value}`);
       headers[key] = value;
     }
+
+    console.log('-** Universal Fetch -**', headers);
 
     try {
       switch (m) {
