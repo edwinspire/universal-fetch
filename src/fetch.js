@@ -125,10 +125,20 @@ class uFetch {
     }
 
     headers = this._addAuthorizationHeader(headers);
+    let existsContentType = false;
 
     for (const [key, value] of this._defaultHeaders) {
       //console.log(`${key} = ${value}`);
       headers[key] = value;
+
+      if (key.toUpperCase() == 'Content-Type'.toUpperCase()) {
+        existsContentType = true;
+      }
+
+    }
+
+    if (existsContentType) {
+      headers['Content-Type'] = "application/json";
     }
 
     console.log('-** Universal Fetch -**', headers);
