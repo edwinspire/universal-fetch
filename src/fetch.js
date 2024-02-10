@@ -166,9 +166,10 @@ class uFetch {
           break;
       }
 
-      if (this._redirect_in_unauthorized && response.status == 401) {
+      if (window && this._redirect_in_unauthorized && response.status == 401) {
         window.location.href = this._redirect_in_unauthorized;
       }
+
       //cache.put(event.request, response.clone());
       return response;
     } catch (err) {
