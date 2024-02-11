@@ -2,8 +2,13 @@ const uFetch = require('./src/fetch.js');
 
 let fetch = new uFetch('https://dog.ceo/api/breeds/image/random');
 
-fetch.get(null, { hola: 1 }).then((r) => {
-    console.log('Resultado = ', r);
+fetch.setBearerAuthorization('JFLRSJJJ4J4J477FJ92656HH');
+
+fetch.get(null, { hola: 1 }).then(async (r) => {
+
+let result = await r.json();
+
+    console.log('Resultado = ', r, result);
 });
 
 
