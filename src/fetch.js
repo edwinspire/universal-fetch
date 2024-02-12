@@ -46,6 +46,11 @@ class uFetch {
     return this; // 
   }
 
+  ClearAuthorizationHeader(){
+    this._basic_authentication = undefined;
+    this._bearer_authentication = undefined;
+  }
+
   SetBasicAuthentication(user, password) {
     return this.SetBasicAuthorization(user, password);
   }
