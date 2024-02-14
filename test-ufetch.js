@@ -11,7 +11,6 @@ let result = await r.json();
     console.log('Resultado = ', r, result);
 });
 
-
 /*
 fetch.SetBasicAuthentication('Hola', 'mundo').get('https://dog.ceo/api/breeds/image/random').then((r)=>{
 console.log(r);
