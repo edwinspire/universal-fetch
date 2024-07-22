@@ -36,7 +36,7 @@ class uFetch {
    * @returns
    */
   SetBasicAuthorization(username, password) {
-    if (user && password) {
+    if (username && password) {
       this._basic_authentication =
         "Basic " + Buffer.from(username + ":" + password).toString("base64");
       this._bearer_authentication = undefined;
