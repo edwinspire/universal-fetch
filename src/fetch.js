@@ -156,7 +156,7 @@ class uFetch {
       headers['Content-Type'] = "application/json";
     }
 
-    console.log('-** Universal Fetch -**', headers);
+    //console.log('-** Universal Fetch -**', headers);
 
     try {
       switch (m) {
