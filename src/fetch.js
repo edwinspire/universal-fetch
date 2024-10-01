@@ -201,7 +201,7 @@ class uFetch {
         window.location.href = this._redirect_in_unauthorized;
       }
 
-      console.warn(">>>>> ", response.headers);
+    //  console.warn(">>>>> ", response.headers);
 
       //cache.put(event.request, response.clone());
       return response;
