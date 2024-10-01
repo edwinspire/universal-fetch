@@ -43,10 +43,10 @@ class uFetch {
     } else {
       this._basic_authentication = undefined;
     }
-    return this; // 
+    return this; //
   }
 
-  ClearAuthorizationHeader(){
+  ClearAuthorizationHeader() {
     this._basic_authentication = undefined;
     this._bearer_authentication = undefined;
   }
@@ -135,25 +135,27 @@ class uFetch {
       //console.log(`${key} = ${value}`);
       headers[key] = value;
 
-      if (!existsContentType && key.toUpperCase() == 'Content-Type'.toUpperCase()) {
+      if (
+        !existsContentType &&
+        key.toUpperCase() == "Content-Type".toUpperCase()
+      ) {
         existsContentType = true;
       }
-
     }
-
 
     let existsContentType = false;
     for (const [key, value] of Object.entries(headers)) {
-    
-      if (!existsContentType && key.toUpperCase() == 'Content-Type'.toUpperCase()) {
+      if (
+        !existsContentType &&
+        key.toUpperCase() == "Content-Type".toUpperCase()
+      ) {
         existsContentType = true;
         break;
       }
-
     }
 
     if (!existsContentType) {
-      headers['Content-Type'] = "application/json";
+      headers["Content-Type"] = "application/json";
     }
 
     //console.log('-** Universal Fetch -**', headers);
@@ -191,9 +193,15 @@ class uFetch {
           break;
       }
 
-      if (typeof window !== 'undefined' && this._redirect_in_unauthorized && response.status == 401) {
+      if (
+        typeof window !== "undefined" &&
+        this._redirect_in_unauthorized &&
+        response.status == 401
+      ) {
         window.location.href = this._redirect_in_unauthorized;
       }
+
+      console.warn(">>>>> ", response);
 
       //cache.put(event.request, response.clone());
       return response;
@@ -261,7 +269,7 @@ class uFetch {
     return this.request(url, "GET", data, headers);
   }
 
-   GET(opts) {
+  GET(opts) {
     return this.request(opts.url, "GET", opts.data, opts.headers);
   }
 
