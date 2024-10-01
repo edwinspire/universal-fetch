@@ -1,12 +1,16 @@
 const uFetch = require('./src/fetch.js');
 
-let fetch = new uFetch('https://dog.ceo/api/breeds/image/random');
+let url = 'http://192.168.242.59:3030/api/demo/tipo/xyZ/dev';
+// let url = 'https://dog.ceo/api/breeds/image/random';
+
+let fetch = new uFetch();
 
 fetch.setBearerAuthorization('JFLRSJJJ4J4J477FJ92656HH');
 
-fetch.get(null, { hola: 1 }).then(async (r) => {
+fetch.GET({url: url, data: {}}).then(async (r) => {
+    console.log(r);
 
-let result = await r.json();
+let result = await r.text();
 
     console.log('Resultado = ', r, result);
 });

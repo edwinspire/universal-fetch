@@ -216,7 +216,7 @@ class uFetch {
     return this.request(url, "PUT", data, headers);
   }
 
-  async PUT(opts) {
+  PUT(opts) {
     return this.request(opts.url, "PUT", opts.data, opts.headers);
   }
 
@@ -231,7 +231,7 @@ class uFetch {
     return this.request(url, "DELETE", data, headers);
   }
 
-  async DELETE(opts) {
+  DELETE(opts) {
     return this.request(opts.url, "DELETE", opts.data, opts.headers);
   }
 
@@ -246,7 +246,7 @@ class uFetch {
     return this.request(url, "POST", data, headers);
   }
 
-  async POST(opts) {
+  POST(opts) {
     return this.request(opts.url, "POST", opts.data, opts.headers);
   }
 
@@ -261,7 +261,7 @@ class uFetch {
     return this.request(url, "GET", data, headers);
   }
 
-  async GET(opts) {
+   GET(opts) {
     return this.request(opts.url, "GET", opts.data, opts.headers);
   }
 
@@ -276,7 +276,7 @@ class uFetch {
     return this.request(url, "PATCH", data, headers);
   }
 
-  async PATCH(opts) {
+  PATCH(opts) {
     return this.request(opts.url, "PATCH", opts.data, opts.headers);
   }
 }
