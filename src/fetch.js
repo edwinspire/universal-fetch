@@ -55,18 +55,6 @@ class uFetch {
     return this.SetBasicAuthorization(user, password);
   }
 
-  /*
-  setBasicAuthorization(user, password) {
-    if (user && password) {
-      this._basic_authentication =
-        "Basic " + Buffer.from(user + ":" + password).toString("base64");
-    } else {
-      this._basic_authentication = undefined;
-    }
-    return this;
-  }
-  */
-
   setBearerAuthorization(key) {
     if (key) {
       this._bearer_authentication = "Bearer " + key;
@@ -104,8 +92,6 @@ class uFetch {
     let response;
     let m = method ? method.toUpperCase() : "GET";
     let u = url && url.length > 0 ? url : this._url;
-
-    //console.log('000000000> ', m, data);
 
     if (
       !(
@@ -158,8 +144,6 @@ class uFetch {
       headers["Content-Type"] = "application/json";
     }
 
-    //console.log('-** Universal Fetch -**', headers);
-
     try {
       switch (m) {
         case "POST":
@@ -201,12 +185,9 @@ class uFetch {
         window.location.href = this._redirect_in_unauthorized;
       }
 
-    //  console.warn(">>>>> ", response.headers);
-
-      //cache.put(event.request, response.clone());
       return response;
     } catch (err) {
-      console.log(err);
+      console.error(err);
       //const response = await cache.match(event.request);
       if (response) return response;
       throw err;
@@ -214,13 +195,11 @@ class uFetch {
   }
 
   /**
-   *
-   * @param {string | undefined} url
-   * @param {any | undefined} data
-   * @param {any | undefined} headers
-   * @returns {Promise}
+   * @deprecated This method is deprecated and will be removed in future versions.
+   * Use the new method with capital letters, remember to see the documentation of this new method.
    */
   async put(url = undefined, data = undefined, headers = undefined) {
+    console.warn('Method put deprecated. Use new method PUT');
     return this.request(url, "PUT", data, headers);
   }
 
@@ -228,29 +207,27 @@ class uFetch {
     return this.request(opts.url, "PUT", opts.data, opts.headers);
   }
 
+  
   /**
-   *
-   * @param {string | undefined} url
-   * @param {any | undefined} data
-   * @param {any | undefined} headers
-   * @returns {Promise}
+   * @deprecated This method is deprecated and will be removed in future versions.
+   * Use the new method with capital letters, remember to see the documentation of this new method.
    */
   async delete(url = undefined, data = undefined, headers = undefined) {
     return this.request(url, "DELETE", data, headers);
   }
 
   DELETE(opts = {}) {
+    console.warn('Method delete deprecated. Use new method DELETE');
     return this.request(opts.url, "DELETE", opts.data, opts.headers);
   }
 
+  
   /**
-   *
-   * @param {string | undefined} url
-   * @param {any | undefined} data
-   * @param {any | undefined} headers
-   * @returns {Promise}
+   * @deprecated This method is deprecated and will be removed in future versions.
+   * Use the new method with capital letters, remember to see the documentation of this new method.
    */
   async post(url = undefined, data = undefined, headers = undefined) {
+    console.warn('Method post deprecated. Use new method POST');
     return this.request(url, "POST", data, headers);
   }
 
@@ -258,14 +235,13 @@ class uFetch {
     return this.request(opts.url, "POST", opts.data, opts.headers);
   }
 
+  
   /**
-   *
-   * @param {string | undefined} url
-   * @param {any | undefined} data
-   * @param {any | undefined} headers
-   * @returns {Promise}
+   * @deprecated This method is deprecated and will be removed in future versions.
+   * Use the new method with capital letters, remember to see the documentation of this new method.
    */
   async get(url = undefined, data = undefined, headers = undefined) {
+    console.warn('Method get deprecated. Use new method GET');
     return this.request(url, "GET", data, headers);
   }
 
@@ -273,14 +249,13 @@ class uFetch {
     return this.request(opts.url, "GET", opts.data, opts.headers);
   }
 
+  
   /**
-   *
-   * @param {string | undefined} url
-   * @param {any | undefined} data
-   * @param {any | undefined} headers
-   * @returns {Promise}
+   * @deprecated This method is deprecated and will be removed in future versions.
+   * Use the new method with capital letters, remember to see the documentation of this new method.
    */
   async patch(url = undefined, data = undefined, headers = undefined) {
+    console.warn('Method patch deprecated. Use new method PATCH');
     return this.request(url, "PATCH", data, headers);
   }
 
