@@ -240,10 +240,12 @@ class uFetch {
   }
 
   POST(opts = {}) {
+    /*
     console.log('POST::::::> ', opts.data);
     for (const value of opts.data.values()) {
       console.log('5 = > ', value);
-    }   
+    }
+    */   
     return this.request(opts.url, "POST", opts.data, opts.headers);
   }
 
