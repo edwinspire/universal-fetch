@@ -150,7 +150,7 @@ class uFetch {
           //    console.log('++++++++++++++++++> POST', data, JSON.stringify(data));
           response = await fetchData(u, {
             method: m,
-            body: JSON.stringify(data),
+            body: data instanceof FormData ? data : JSON.stringify(data),
             headers: headers,
           });
 
@@ -199,7 +199,7 @@ class uFetch {
    * Use the new method with capital letters, remember to see the documentation of this new method.
    */
   async put(url = undefined, data = undefined, headers = undefined) {
-    console.warn('Method put deprecated. Use new method PUT');
+    console.warn("Method put deprecated. Use new method PUT");
     return this.request(url, "PUT", data, headers);
   }
 
@@ -207,7 +207,6 @@ class uFetch {
     return this.request(opts.url, "PUT", opts.data, opts.headers);
   }
 
-  
   /**
    * @deprecated This method is deprecated and will be removed in future versions.
    * Use the new method with capital letters, remember to see the documentation of this new method.
@@ -217,17 +216,16 @@ class uFetch {
   }
 
   DELETE(opts = {}) {
-    console.warn('Method delete deprecated. Use new method DELETE');
+    console.warn("Method delete deprecated. Use new method DELETE");
     return this.request(opts.url, "DELETE", opts.data, opts.headers);
   }
 
-  
   /**
    * @deprecated This method is deprecated and will be removed in future versions.
    * Use the new method with capital letters, remember to see the documentation of this new method.
    */
   async post(url = undefined, data = undefined, headers = undefined) {
-    console.warn('Method post deprecated. Use new method POST');
+    console.warn("Method post deprecated. Use new method POST");
     return this.request(url, "POST", data, headers);
   }
 
@@ -235,13 +233,12 @@ class uFetch {
     return this.request(opts.url, "POST", opts.data, opts.headers);
   }
 
-  
   /**
    * @deprecated This method is deprecated and will be removed in future versions.
    * Use the new method with capital letters, remember to see the documentation of this new method.
    */
   async get(url = undefined, data = undefined, headers = undefined) {
-    console.warn('Method get deprecated. Use new method GET');
+    console.warn("Method get deprecated. Use new method GET");
     return this.request(url, "GET", data, headers);
   }
 
@@ -249,13 +246,12 @@ class uFetch {
     return this.request(opts.url, "GET", opts.data, opts.headers);
   }
 
-  
   /**
    * @deprecated This method is deprecated and will be removed in future versions.
    * Use the new method with capital letters, remember to see the documentation of this new method.
    */
   async patch(url = undefined, data = undefined, headers = undefined) {
-    console.warn('Method patch deprecated. Use new method PATCH');
+    console.warn("Method patch deprecated. Use new method PATCH");
     return this.request(url, "PATCH", data, headers);
   }
 
