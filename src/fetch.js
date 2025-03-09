@@ -147,7 +147,12 @@ class uFetch {
     try {
       switch (m) {
         case "POST":
-          //    console.log('++++++++++++++++++> POST', data, JSON.stringify(data));
+          if (data instanceof FormData) {
+            delete headers["Content-Type"];
+          }
+
+          console.log("++++++++++++++++++> POST", data, headers);
+          
           response = await fetchData(u, {
             method: m,
             body: data instanceof FormData ? data : JSON.stringify(data),

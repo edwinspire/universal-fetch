@@ -4,10 +4,11 @@ let url = 'http://192.168.242.59:3030/api/demo/tipo/xyZ/dev';
 // let url = 'https://dog.ceo/api/breeds/image/random';
 
 let fetch = new uFetch();
+const formData = new FormData();
 
 fetch.setBearerAuthorization('JFLRSJJJ4J4J477FJ92656HH');
 
-fetch.GET({url: url, data: {}}).then(async (r) => {
+fetch.POST({url: url, data: formData}).then(async (r) => {
     console.log(r);
 
 let result = await r.text();
