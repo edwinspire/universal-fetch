@@ -144,22 +144,19 @@ class uFetch {
       }
     }
 
-    if (!existsContentType) {
-      headers["Content-Type"] =
-        data instanceof FormData
-          ? `multipart/form-data; boundary=${this._generarBoundary()}`
-          : "application/json";
+    if (!existsContentType && !data instanceof FormData) {
+      headers["Content-Type"] = "application/json";
     }
 
     try {
       switch (m) {
         case "POST":
-          /*     
-        if (data instanceof FormData) {
-            delete headers["Content-Type"];
-          }
-*/
+       
           console.log("++++++++++++++++++> POST", data, headers);
+
+          for (const value of data.values()) {
+            console.log('= > ',value);
+          }
 
           response = await fetchData(u, {
             method: m,
@@ -243,6 +240,10 @@ class uFetch {
   }
 
   POST(opts = {}) {
+    console.log('POST::::::> ', opts.data);
+    for (const value of opts.data.values()) {
+      console.log('5 = > ', value);
+    }   
     return this.request(opts.url, "POST", opts.data, opts.headers);
   }
 
