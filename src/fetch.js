@@ -65,6 +65,10 @@ class uFetch {
     return this;
   }
 
+  _generarBoundary() {
+    return "----Boundary" + Math.random().toString(36).substring(2, 15);
+  }
+
   _addAuthorizationHeader(headers) {
     if (this._basic_authentication) {
       headers.Authorization = this._basic_authentication;
@@ -141,18 +145,22 @@ class uFetch {
     }
 
     if (!existsContentType) {
-      headers["Content-Type"] = "application/json";
+      headers["Content-Type"] =
+        data instanceof FormData
+          ? `multipart/form-data; boundary=${this._generarBoundary()}`
+          : "application/json";
     }
 
     try {
       switch (m) {
         case "POST":
-          if (data instanceof FormData) {
+          /*     
+        if (data instanceof FormData) {
             delete headers["Content-Type"];
           }
-
+*/
           console.log("++++++++++++++++++> POST", data, headers);
-          
+
           response = await fetchData(u, {
             method: m,
             body: data instanceof FormData ? data : JSON.stringify(data),
