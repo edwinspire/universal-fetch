@@ -152,12 +152,6 @@ class uFetch {
       switch (m) {
         case "POST":
        
-          console.log("++++++++++++++++++> POST", data, headers);
-
-          for (const value of data.values()) {
-            console.log('= > ',value);
-          }
-
           response = await fetchData(u, {
             method: m,
             body: data instanceof FormData ? data : JSON.stringify(data),
