@@ -144,7 +144,7 @@ class uFetch {
       }
     }
 
-    if (!existsContentType && !data instanceof FormData) {
+    if (!existsContentType && !(data instanceof FormData)) {
       headers["Content-Type"] = "application/json";
     }
 
