@@ -151,7 +151,6 @@ class uFetch {
     try {
       switch (m) {
         case "POST":
-       
           response = await fetchData(u, {
             method: m,
             body: data instanceof FormData ? data : JSON.stringify(data),
@@ -169,8 +168,13 @@ class uFetch {
 
           break;
         default:
-          let searchURL = new URLSearchParams(data);
-          u = u + "?" + searchURL.toString();
+          if (data) {
+            let searchURL = new URLSearchParams(data);
+            let queryString = searchURL.toString();
+            if (queryString.length > 0) {
+              u = u + "?" + searchURL.toString();
+            }
+          }
 
           response = await fetchData(u, {
             method: m,
@@ -239,7 +243,7 @@ class uFetch {
     for (const value of opts.data.values()) {
       console.log('5 = > ', value);
     }
-    */   
+    */
     return this.request(opts.url, "POST", opts.data, opts.headers);
   }
 
