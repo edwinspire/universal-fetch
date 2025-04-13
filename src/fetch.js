@@ -153,7 +153,7 @@ class uFetch {
         case "POST":
           response = await fetchData(u, {
             method: m,
-            body: data instanceof FormData ? data : JSON.stringify(data),
+            body: this.create_body(data),
             headers: headers,
           });
 
@@ -168,19 +168,27 @@ class uFetch {
 
           break;
         default:
-          if (data) {
+          if (data instanceof FormData || Array.isArray(data)) {
+ 
+            response = await fetchData(u, {
+              method: m,
+              body: this.create_body(data),
+              headers: headers,
+            });
+ 
+          } else {
+ 
             let searchURL = new URLSearchParams(data);
             let queryString = searchURL.toString();
             if (queryString.length > 0) {
               u = u + "?" + searchURL.toString();
             }
-          }
 
-          response = await fetchData(u, {
-            method: m,
-            //            body: JSON.stringify(data),
-            headers: headers,
-          });
+            response = await fetchData(u, {
+              method: m,
+              headers: headers,
+            });
+          }
 
           break;
       }
@@ -202,6 +210,10 @@ class uFetch {
     }
   }
 
+  create_body(data) {
+    return data instanceof FormData ? data : JSON.stringify(data);
+  }
+
   /**
    * @deprecated This method is deprecated and will be removed in future versions.
    * Use the new method with capital letters, remember to see the documentation of this new method.
@@ -220,11 +232,11 @@ class uFetch {
    * Use the new method with capital letters, remember to see the documentation of this new method.
    */
   async delete(url = undefined, data = undefined, headers = undefined) {
+    console.warn("Method delete deprecated. Use new method DELETE");
     return this.request(url, "DELETE", data, headers);
   }
 
   DELETE(opts = {}) {
-    console.warn("Method delete deprecated. Use new method DELETE");
     return this.request(opts.url, "DELETE", opts.data, opts.headers);
   }
 
