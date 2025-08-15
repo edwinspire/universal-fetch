@@ -1,15 +1,16 @@
 "use strict";
 
 /**
- * @type {(((input: RequestInfo | URL, init?: RequestInit | undefined) => Promise<Response>) & ((input: RequestInfo | URL, init?: RequestInit | undefined) => Promise<Response>)) | typeof fetch | ((arg0: string | undefined, arg1: { method: string; body?: string; headers: any; }) => any)}
+ * @type {typeof fetch}
  */
 let fetchData;
 
 if (typeof window !== "undefined") {
-  fetchData = window.fetch;
+  // Estamos en el navegador → usar fetch del browser
+  fetchData = window.fetch.bind(window);
 } else {
-  const fetch = require("node-fetch");
-  fetchData = fetch;
+  // Estamos en Node.js → usar fetch nativo de Node (v18+)
+  fetchData = globalThis.fetch.bind(globalThis);
 }
 
 /**
