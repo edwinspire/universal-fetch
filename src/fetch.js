@@ -149,13 +149,22 @@ class uFetch {
       headers["Content-Type"] = "application/json";
     }
 
+    const h = new Headers();
+
+    for (const [key, value] of Object.entries(headers)) {
+      h.append(key, value);
+    }
+
+    // Eliminar Content-Length
+    h.delete("Content-Length");
+
     try {
       switch (m) {
         case "POST":
           response = await fetchData(u, {
             method: m,
             body: this.create_body(data),
-            headers: headers,
+            headers: h,
           });
 
           break;
@@ -164,21 +173,18 @@ class uFetch {
           response = await fetchData(u, {
             method: m,
             body: JSON.stringify(data),
-            headers: headers,
+            headers: h,
           });
 
           break;
         default:
           if (data instanceof FormData || Array.isArray(data)) {
- 
             response = await fetchData(u, {
               method: m,
               body: this.create_body(data),
-              headers: headers,
+              headers: h,
             });
- 
           } else {
- 
             let searchURL = new URLSearchParams(data);
             let queryString = searchURL.toString();
             if (queryString.length > 0) {
@@ -187,7 +193,7 @@ class uFetch {
 
             response = await fetchData(u, {
               method: m,
-              headers: headers,
+              headers: h,
             });
           }
 
