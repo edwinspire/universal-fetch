@@ -81,6 +81,14 @@ class uFetch {
     return headers;
   }
 
+  _createOptions(basic, options = {}) {
+    let r = options ?? {};
+    r.method = basic.method;
+    r.body = basic.body;
+    r.headers = basic.headers;
+    return r;
+  }
+
   addHeader(key, value) {
     this._defaultHeaders.set(key, value);
   }
@@ -93,7 +101,7 @@ class uFetch {
    * @param {any | undefined} headers
    * @returns {Promise}
    */
-  async request(url, method, data, headers = {}) {
+  async request(url, method, data, headers = {}, options = {}) {
     let response;
     let m = method ? method.toUpperCase() : "GET";
     let u = url && url.length > 0 ? url : this._url;
@@ -161,29 +169,47 @@ class uFetch {
     try {
       switch (m) {
         case "POST":
-          response = await fetchData(u, {
-            method: m,
-            body: this.create_body(data),
-            headers: h,
-          });
+          response = await fetchData(
+            u,
+            this._createOptions(
+              {
+                method: m,
+                body: this.create_body(data),
+                headers: h,
+              },
+              options
+            )
+          );
 
           break;
 
         case "PUT":
-          response = await fetchData(u, {
-            method: m,
-            body: JSON.stringify(data),
-            headers: h,
-          });
+          response = await fetchData(
+            u,
+            this._createOptions(
+              {
+                method: m,
+                body: JSON.stringify(data),
+                headers: h,
+              },
+              options
+            )
+          );
 
           break;
         default:
           if (data instanceof FormData || Array.isArray(data)) {
-            response = await fetchData(u, {
-              method: m,
-              body: this.create_body(data),
-              headers: h,
-            });
+            response = await fetchData(
+              u,
+              this._createOptions(
+                {
+                  method: m,
+                  body: this.create_body(data),
+                  headers: h,
+                },
+                options
+              )
+            );
           } else {
             let searchURL = new URLSearchParams(data);
             let queryString = searchURL.toString();
@@ -191,10 +217,16 @@ class uFetch {
               u = u + "?" + searchURL.toString();
             }
 
-            response = await fetchData(u, {
-              method: m,
-              headers: h,
-            });
+            response = await fetchData(
+              u,
+              this._createOptions(
+                {
+                  method: m,
+                  headers: h,
+                },
+                options
+              )
+            );
           }
 
           break;
@@ -225,35 +257,56 @@ class uFetch {
    * @deprecated This method is deprecated and will be removed in future versions.
    * Use the new method with capital letters, remember to see the documentation of this new method.
    */
-  async put(url = undefined, data = undefined, headers = undefined) {
+  async put(
+    url = undefined,
+    data = undefined,
+    headers = undefined,
+    options = {}
+  ) {
     console.warn("Method put deprecated. Use new method PUT");
-    return this.request(url, "PUT", data, headers);
+    return this.request(url, "PUT", data, headers, options);
   }
 
   PUT(opts = {}) {
-    return this.request(opts.url, "PUT", opts.data, opts.headers);
+    return this.request(opts.url, "PUT", opts.data, opts.headers, opts.options);
   }
 
   /**
    * @deprecated This method is deprecated and will be removed in future versions.
    * Use the new method with capital letters, remember to see the documentation of this new method.
    */
-  async delete(url = undefined, data = undefined, headers = undefined) {
+  async delete(
+    url = undefined,
+    data = undefined,
+    headers = undefined,
+    options = {}
+  ) {
     console.warn("Method delete deprecated. Use new method DELETE");
-    return this.request(url, "DELETE", data, headers);
+    return this.request(url, "DELETE", data, headers, options);
   }
 
   DELETE(opts = {}) {
-    return this.request(opts.url, "DELETE", opts.data, opts.headers);
+    return this.request(
+      opts.url,
+      "DELETE",
+      opts.data,
+      opts.headers,
+      opts.options
+    );
   }
 
   /**
    * @deprecated This method is deprecated and will be removed in future versions.
    * Use the new method with capital letters, remember to see the documentation of this new method.
    */
-  async post(url = undefined, data = undefined, headers = undefined) {
+  async post(
+    url = undefined,
+    data = undefined,
+    headers = undefined,
+    options = {}
+  ) {
     console.warn("Method post deprecated. Use new method POST");
-    return this.request(url, "POST", data, headers);
+    return this.request(url, "POST", data, headers, options);
   }
 
   POST(opts = {}) {
@@ -263,33 +316,50 @@ class uFetch {
       console.log('5 = > ', value);
     }
     */
-    return this.request(opts.url, "POST", opts.data, opts.headers);
+    return this.request(
+      opts.url,
+      "POST",
+      opts.data,
+      opts.headers,
+      opts.options
+    );
   }
 
   /**
    * @deprecated This method is deprecated and will be removed in future versions.
    * Use the new method with capital letters, remember to see the documentation of this new method.
    */
-  async get(url = undefined, data = undefined, headers = undefined) {
+  async get(
+    url = undefined,
+    data = undefined,
+    headers = undefined,
+    options = {}
+  ) {
     console.warn("Method get deprecated. Use new method GET");
-    return this.request(url, "GET", data, headers);
+    return this.request(url, "GET", data, headers, options);
   }
 
   GET(opts = {}) {
-    return this.request(opts.url, "GET", opts.data, opts.headers);
+    return this.request(opts.url, "GET", opts.data, opts.headers, opts.options);
   }
 
   /**
    * @deprecated This method is deprecated and will be removed in future versions.
    * Use the new method with capital letters, remember to see the documentation of this new method.
    */
-  async patch(url = undefined, data = undefined, headers = undefined) {
+  async patch(url = undefined, data = undefined, headers = undefined, options) {
     console.warn("Method patch deprecated. Use new method PATCH");
-    return this.request(url, "PATCH", data, headers);
+    return this.request(url, "PATCH", data, headers, options);
   }
 
   PATCH(opts = {}) {
-    return this.request(opts.url, "PATCH", opts.data, opts.headers);
+    return this.request(
+      opts.url,
+      "PATCH",
+      opts.data,
+      opts.headers,
+      opts.options
+    );
   }
 }
 
