@@ -1,11 +1,11 @@
 {
   "name": "@edwinspire/universal-fetch",
   "description": "Class to use fetch in Nodejs and in the browser",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "author": "edwinspire <edwinspire@gmail.com>",
-  "type": "module",
+  "type": "commonjs",
   "engines": {
-    "node": ">=19.0.0"
+    "node": ">=20.0.0"
   },
   "contributors": [
     "edwinspire"

@@ -1,22 +1,43 @@
-import fs from "fs";
-import path from "path";
+const fs = require("fs");
+const path = require("path");
 
-const packagePath = path.resolve("package.json");
+// Obtener el tipo de incremento del argumento (patch, minor, major)
+const incrementType = process.argv[2] || "patch";
 
-// Leer package.json
-const packageData = JSON.parse(fs.readFileSync(packagePath, "utf8"));
+try {
+  const packagePath = path.resolve("package.json");
+  const packageData = JSON.parse(fs.readFileSync(packagePath, "utf8"));
 
-// Obtener y dividir versión
-let version = packageData.version || "0.0.0";
-let parts = version.split(".").map(Number);
+  let version = packageData.version || "0.0.0";
+  let parts = version.split(".").map(Number);
 
-// Incrementar el último número (patch)
-parts[2] = parts[2] + 1;
-let newVersion = parts.join(".");
+  // Incrementar según el tipo
+  switch (incrementType) {
+    case "major":
+      parts[0]++;
+      parts[1] = 0;
+      parts[2] = 0;
+      break;
+    case "minor":
+      parts[1]++;
+      parts[2] = 0;
+      break;
+    case "patch":
+    default:
+      parts[2]++;
+      break;
+  }
 
-// Actualizar package.json
-packageData.version = newVersion;
-fs.writeFileSync(packagePath, JSON.stringify(packageData, null, 2) + "\n", "utf8");
+  let newVersion = parts.join(".");
+  packageData.version = newVersion;
 
-
-console.log(`Versión actualizada a ${newVersion}`);
+  fs.writeFileSync(
+    packagePath,
+    JSON.stringify(packageData, null, 2) + "\n",
+    "utf8"
+  );
+  console.log(`✅ Versión actualizada de ${version} a ${newVersion}`);
+} catch (error) {
+  console.error(`❌ Error: ${error.message}`);
+  process.exit(1);
+}
