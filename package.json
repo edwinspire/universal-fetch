@@ -1,9 +1,9 @@
 {
   "name": "@edwinspire/universal-fetch",
   "description": "Class to use fetch in Nodejs and in the browser",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "author": "edwinspire <edwinspire@gmail.com>",
-  "type": "commonjs",
+  "type": "module",
   "engines": {
     "node": ">=19.0.0"
   },
@@ -16,7 +16,8 @@
     "browser"
   ],
   "scripts": {
-    "test": "node ./test-ufetch.js"
+    "test": "node ./test-ufetch.js",
+    "set_version": "node ./set_version.js"
   },
   "repository": {
     "type": "git",
