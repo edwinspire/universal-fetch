@@ -4,9 +4,10 @@
  * Selecciona fetch del entorno (browser / node)
  * @type {typeof fetch}
  */
-const fetchData = (typeof window !== "undefined")
-  ? window.fetch.bind(window)
-  : globalThis.fetch.bind(globalThis);
+const fetchData =
+  typeof window !== "undefined"
+    ? window.fetch.bind(window)
+    : globalThis.fetch.bind(globalThis);
 
 class uFetch {
   constructor(url = undefined, redirect_in_unauthorized = undefined) {
@@ -18,14 +19,19 @@ class uFetch {
   }
 
   SetBasicAuthorization(username, password) {
-    if (!username || !password || typeof username !== "string" || typeof password !== "string") {
+    if (
+      !username ||
+      !password ||
+      typeof username !== "string" ||
+      typeof password !== "string"
+    ) {
       this._basic_authentication = undefined;
       return this;
     }
 
     const credentials = `${username}:${password}`;
     const base64 =
-      (typeof Buffer !== "undefined")
+      typeof Buffer !== "undefined"
         ? Buffer.from(credentials).toString("base64")
         : btoa(credentials);
 
@@ -101,10 +107,23 @@ class uFetch {
     return JSON.stringify(data);
   }
 
-  async request(url, method = "GET", data = undefined, headers = {}, options = {}) {
+  async request(
+    url,
+    method = "GET",
+    data = undefined,
+    headers = {},
+    options = {}
+  ) {
     const validMethods = new Set([
-      "GET", "POST", "PUT", "PATCH", "DELETE",
-      "HEAD", "OPTIONS", "CONNECT", "TRACE"
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "HEAD",
+      "OPTIONS",
+      "CONNECT",
+      "TRACE",
     ]);
     method = method.toUpperCase();
 
@@ -127,13 +146,15 @@ class uFetch {
       }
     }
 
-    const body = !["GET", "HEAD"].includes(method) ? this._createBody(data) : undefined;
+    const body = !["GET", "HEAD"].includes(method)
+      ? this._createBody(data)
+      : undefined;
 
     const opts = {
       method,
       headers: h,
       body,
-      ...options
+      ...options,
     };
 
     let response;
@@ -156,11 +177,39 @@ class uFetch {
   }
 
   // Métodos simplificados
-  GET(opts = {})    { return this.request(opts.url, "GET", opts.data, opts.headers, opts.options); }
-  POST(opts = {})   { return this.request(opts.url, "POST", opts.data, opts.headers, opts.options); }
-  PUT(opts = {})    { return this.request(opts.url, "PUT",  opts.data, opts.headers, opts.options); }
-  PATCH(opts = {})  { return this.request(opts.url, "PATCH",opts.data, opts.headers, opts.options); }
-  DELETE(opts = {}) { return this.request(opts.url, "DELETE",opts.data, opts.headers, opts.options); }
+  GET(opts = {}) {
+    return this.request(opts.url, "GET", opts.data, opts.headers, opts.options);
+  }
+  POST(opts = {}) {
+    return this.request(
+      opts.url,
+      "POST",
+      opts.data,
+      opts.headers,
+      opts.options
+    );
+  }
+  PUT(opts = {}) {
+    return this.request(opts.url, "PUT", opts.data, opts.headers, opts.options);
+  }
+  PATCH(opts = {}) {
+    return this.request(
+      opts.url,
+      "PATCH",
+      opts.data,
+      opts.headers,
+      opts.options
+    );
+  }
+  DELETE(opts = {}) {
+    return this.request(
+      opts.url,
+      "DELETE",
+      opts.data,
+      opts.headers,
+      opts.options
+    );
+  }
 }
 
 module.exports = uFetch;
