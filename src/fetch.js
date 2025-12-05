@@ -37,14 +37,31 @@ class uFetch {
    * @returns
    */
   SetBasicAuthorization(username, password) {
-    if (username && password) {
-      this._basic_authentication =
-        "Basic " + Buffer.from(username + ":" + password).toString("base64");
-      this._bearer_authentication = undefined;
-    } else {
+    if (
+      typeof username !== "string" ||
+      !username.trim() ||
+      typeof password !== "string" ||
+      !password.trim()
+    ) {
       this._basic_authentication = undefined;
+      return this;
     }
-    return this; //
+
+    const credentials = `${username.trim()}:${password.trim()}`;
+    let base64;
+
+    if (typeof Buffer !== "undefined") {
+      base64 = Buffer.from(credentials).toString("base64");
+    } else if (typeof btoa !== "undefined") {
+      base64 = btoa(credentials);
+    } else {
+      throw new Error("No support was found for Base64 (Buffer or btoa)");
+    }
+
+    this._basic_authentication = `Basic ${base64}`;
+    this._bearer_authentication = undefined;
+
+    return this;
   }
 
   ClearAuthorizationHeader() {
