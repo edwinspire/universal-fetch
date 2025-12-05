@@ -85,6 +85,13 @@ class uFetch {
     // auth
     this._addAuthorizationHeader(h);
 
+    if (!h.has("Content-Type")) {
+      h.append("Content-Type", "application/json");
+    }
+
+    // Eliminar Content-Length
+    h.delete("Content-Length");
+
     return h;
   }
 
