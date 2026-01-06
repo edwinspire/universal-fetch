@@ -69,7 +69,7 @@ class uFetch {
     }
   }
 
-  _normalizeHeaders(headers = {}) {
+  _normalizeHeaders(headers = {}, data = undefined) {
     const h = new Headers();
 
     // convertir headers del usuario a Headers()
@@ -86,7 +86,16 @@ class uFetch {
     this._addAuthorizationHeader(h);
 
     if (!h.has("Content-Type")) {
-      h.append("Content-Type", "application/json");
+      const isSpecialBody =
+        data instanceof FormData ||
+        data instanceof Blob ||
+        data instanceof URLSearchParams ||
+        data instanceof ReadableStream ||
+        data instanceof ArrayBuffer;
+
+      if (!isSpecialBody && data != null) {
+        h.append("Content-Type", "application/json");
+      }
     }
 
     // Eliminar Content-Length
@@ -141,7 +150,7 @@ class uFetch {
     const finalURL = url || this._url;
     if (!finalURL) throw new Error("URL is required");
 
-    const h = this._normalizeHeaders(headers);
+    const h = this._normalizeHeaders(headers, data);
 
     let finalURLWithParams = finalURL;
 
