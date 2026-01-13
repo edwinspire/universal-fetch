@@ -148,10 +148,10 @@ class uFetch {
     }
 
     const finalURL = url || this._url;
-    
-    if (!finalURL || finalURL.trim() === "" || finalURL.trim() === "undefined" || finalURL.trim() === "null" || typeof finalURL !== "string") {
-      console.error("string URL is required", url, this._url);
-      throw new Error("string URL is required");
+
+    if (!URL.canParse(finalURL)) {
+      console.error("Is required a valid URL", url, this._url);
+      throw new Error("Is required a valid URL");
     }
 
     const h = this._normalizeHeaders(headers, data);
