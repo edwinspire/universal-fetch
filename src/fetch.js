@@ -1,5 +1,7 @@
 "use strict";
 
+const regexIsAbsolute = /^[a-zA-Z][a-zA-Z\d+\-.]*:/;
+
 /**
  * Selecciona fetch del entorno (browser / node)
  * @type {typeof fetch}
@@ -128,7 +130,7 @@ class uFetch {
     method = "GET",
     data = undefined,
     headers = {},
-    options = {}
+    options = {},
   ) {
     const validMethods = new Set([
       "GET",
@@ -149,9 +151,18 @@ class uFetch {
 
     const finalURL = url || this._url;
 
-    if (!URL.canParse(finalURL)) {
-      console.error("Is required a valid URL", url, this._url);
-      throw new Error("Is required a valid URL");
+    const URLIsValid = regexIsAbsolute.test(finalURL)
+      ? URL.canParse(finalURL)
+      : URL.canParse(
+          finalURL,
+          typeof window !== "undefined"
+            ? window.location.href
+            : "http://localhost",
+        );
+
+    if (!URLIsValid) {
+      console.error("Is required a valid URL", finalURL);
+      throw new Error("Is required a valid URL " + finalURL);
     }
 
     const h = this._normalizeHeaders(headers, data);
@@ -206,7 +217,7 @@ class uFetch {
       "POST",
       opts.data,
       opts.headers,
-      opts.options
+      opts.options,
     );
   }
   PUT(opts = {}) {
@@ -218,7 +229,7 @@ class uFetch {
       "PATCH",
       opts.data,
       opts.headers,
-      opts.options
+      opts.options,
     );
   }
   DELETE(opts = {}) {
@@ -227,7 +238,7 @@ class uFetch {
       "DELETE",
       opts.data,
       opts.headers,
-      opts.options
+      opts.options,
     );
   }
 }
