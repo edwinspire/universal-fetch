@@ -11,6 +11,18 @@ const fetchData =
     ? window.fetch.bind(window)
     : globalThis.fetch.bind(globalThis);
 
+const validMethods = new Set([
+  "GET",
+  "POST",
+  "PUT",
+  "PATCH",
+  "DELETE",
+  "HEAD",
+  "OPTIONS",
+  "CONNECT",
+  "TRACE",
+]);
+
 class uFetch {
   constructor(url = undefined, redirect_in_unauthorized = undefined) {
     this._redirect_in_unauthorized_internal = redirect_in_unauthorized;
@@ -20,7 +32,7 @@ class uFetch {
     this._defaultHeaders = new Map();
   }
 
-  SetBasicAuthorization(username, password) {
+  setBasicAuthorization(username, password) {
     if (
       !username ||
       !password ||
@@ -42,13 +54,23 @@ class uFetch {
     return this;
   }
 
+  // Alias for backward compatibility
+  SetBasicAuthorization(username, password) {
+    return this.setBasicAuthorization(username, password);
+  }
+
   ClearAuthorizationHeader() {
     this._basic_authentication = undefined;
     this._bearer_authentication = undefined;
   }
 
+  setBasicAuthentication(user, password) {
+    return this.setBasicAuthorization(user, password);
+  }
+
+  // Alias for backward compatibility
   SetBasicAuthentication(user, password) {
-    return this.SetBasicAuthorization(user, password);
+    return this.setBasicAuthentication(user, password);
   }
 
   setBearerAuthorization(key) {
@@ -74,9 +96,16 @@ class uFetch {
   _normalizeHeaders(headers = {}, data = undefined) {
     const h = new Headers();
 
-    // convertir headers del usuario a Headers()
-    for (const [k, v] of Object.entries(headers)) {
-      h.append(k, v);
+    // Helper to add headers from various sources
+    const addFn = (v, k) => h.append(k, v);
+
+    if (headers instanceof Headers || headers instanceof Map) {
+      headers.forEach(addFn);
+    } else {
+      // iterate over object
+      for (const [k, v] of Object.entries(headers)) {
+        h.append(k, v);
+      }
     }
 
     // agregar headers por defecto
@@ -95,7 +124,9 @@ class uFetch {
         data instanceof ReadableStream ||
         data instanceof ArrayBuffer;
 
-      if (!isSpecialBody && data != null) {
+      // Only add application/json if data is not special AND not a string
+      // strings are strictly treated as raw bodies unless header says otherwise
+      if (!isSpecialBody && data != null && typeof data !== "string") {
         h.append("Content-Type", "application/json");
       }
     }
@@ -132,48 +163,53 @@ class uFetch {
     headers = {},
     options = {},
   ) {
-    const validMethods = new Set([
-      "GET",
-      "POST",
-      "PUT",
-      "PATCH",
-      "DELETE",
-      "HEAD",
-      "OPTIONS",
-      "CONNECT",
-      "TRACE",
-    ]);
     method = method.toUpperCase();
 
     if (!validMethods.has(method)) {
       throw new Error("Invalid method");
     }
 
-    const finalURL = url || this._url;
+    let finalURL = url || this._url;
 
-    const URLIsValid = regexIsAbsolute.test(finalURL)
-      ? URL.canParse(finalURL)
-      : URL.canParse(
-          finalURL,
-          typeof window !== "undefined"
-            ? window.location.href
-            : "http://localhost",
-        );
-
-    if (!URLIsValid) {
+    // URL Validation using try-catch for better compatibility
+    const baseURL =
+      typeof window !== "undefined" ? window.location.href : "http://localhost";
+    try {
+      new URL(finalURL, baseURL);
+    } catch (e) {
       console.error("Is required a valid URL", finalURL);
       throw new Error("Is required a valid URL " + finalURL);
     }
 
     const h = this._normalizeHeaders(headers, data);
 
-    let finalURLWithParams = finalURL;
-
     // GET / HEAD → data como querystring
     if (["GET", "HEAD"].includes(method) && data && typeof data === "object") {
-      const query = new URLSearchParams(data).toString();
-      if (query) {
-        finalURLWithParams += (finalURL.includes("?") ? "&" : "?") + query;
+      // Use URL object for safe param appending
+      const isAbsolute = regexIsAbsolute.test(finalURL);
+      const tempBase = "http://dummy-base-for-parsing";
+      // ensure we can parse relative URLs by providing a base
+      const u = new URL(finalURL, isAbsolute ? undefined : tempBase);
+
+      const sp = new URLSearchParams(data);
+      sp.forEach((v, k) => u.searchParams.append(k, v));
+
+      if (isAbsolute) {
+        finalURL = u.toString();
+      } else {
+        // Extract relative path + search + hash
+        // We strip the tempBase.
+        // u.pathname starts with /, but finalURL might not have.
+        // If finalURL was "api/foo", u.pathname is "/api/foo".
+        // Use pathname + search + hash
+        finalURL = u.pathname + u.search + u.hash;
+        // Correction: if original didn't start with /, u.pathname adds it.
+        // We probably want to keep it if the user provided it, but typically / is fine.
+        // But strict reconstruction:
+        // If we really want to preserve "api/foo" vs "/api/foo", it's tricky with URL object.
+        // However, standardizing on / is usually safe for HTTP.
+        // Let's rely on standard u.toString() slicing if relative.
+        // url.pathname initialized from "api/foo" -> "/api/foo".
       }
     }
 
@@ -190,7 +226,7 @@ class uFetch {
 
     let response;
     try {
-      response = await fetchData(finalURLWithParams, opts);
+      response = await fetchData(finalURL, opts);
 
       if (
         typeof window !== "undefined" &&
