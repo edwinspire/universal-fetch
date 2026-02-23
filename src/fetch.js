@@ -88,6 +88,8 @@ class uFetch {
       headers.set("Authorization", this._basic_authentication);
     } else if (this._bearer_authentication) {
       headers.set("Authorization", this._bearer_authentication);
+    } else if (headers.get('Authorization')) {
+      headers.set("Authorization", headers.get('Authorization'));
     } else {
       headers.delete("Authorization");
     }
