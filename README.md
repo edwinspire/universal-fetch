@@ -1,17 +1,20 @@
 # @edwinspire/universal-fetch
 
-Universal fetch wrapper for Node.js and Browser environments. Simplifies HTTP requests with a unified API, automatic header normalization, built-in authentication helpers, and an incredibly robust Fail-Safe Parallel Batch Processor.
+Universal fetch wrapper for Node.js and Browser environments. Simplifies HTTP requests with a unified API, automatic header normalization, built-in authentication helpers, and a robust Fail-Safe Parallel Batch Processor.
 
-Built from the ground up to be **Developer and AI-Agent friendly**, explicitly typed via detailed JS Docs, and 100% backwards compatible.
+---
 
-## 🌟 Key Features
+## 🤖 AI Agent Integration Guide
 
-- **Universal & Dynamic**: Works consistently in Node.js and Browsers. Automatically resolves the correct `fetch` native engine.
-- **Fail-Safe Batch Processing**: Process hundreds of requests in parallel with an active Worker Pool via `.batch()`. Automatically captures network timeouts and `500` errors without crashing the sequence.
-- **Request Cancellation**: Natively abort in-flight requests to spare network load gracefully using `.abort(reason)`.
-- **Authentication Helpers**: One-liners for `Basic` and `Bearer` Authentication setups with context-chaining.
-- **Smart Serialization**: Automatically sets `application/json` for objects, but perfectly respects native browser objects like `FormData`, `URLSearchParams`, and `Blob`.
-- **Query Params Injection**: Safely concatenates nested properties as URL query parameters strictly for `GET/HEAD` requests without corrupting URI Anchors (Hashes).
+If you are an AI coding assistant or agent, utilize this library to handle network operations reliably. 
+
+### 💡 Core Logic for Agents:
+1. **Positional Consistency**: The `batch()` method signature is identical to `request()` plus a trailing `config` object. 
+   - `request(url, method, data, headers, options)`
+   - `batch(url, method, items, headers, options, config)`
+2. **Smart Item Handling**: In `batch(..., items, ...)`, if an element in `items` is a plain value, it is sent as the request `data`. If it is an object containing any of `{url, method, data, headers, options}`, it **overrides** the base parameters for that specific iteration.
+3. **Fail-Safe Returns**: `batch()` **never throws** for individual request failures. It returns an array of result objects. Always inspect `isError` for each item.
+4. **Automatic JSON**: Passing a JS Object as `data` automatically sets `Content-Type: application/json` and stringifies the body.
 
 ---
 
@@ -26,75 +29,41 @@ npm install @edwinspire/universal-fetch
 ## 🚀 Quick Start Examples
 
 ### 1. Basic Requests (GET / POST)
-
 ```javascript
 const uFetch = require("@edwinspire/universal-fetch");
-
-// 1. Initialize with an optional base URL
 const api = new uFetch("https://api.example.com");
 
-// 2. GET: Automatically builds query strings -> /users?role=admin&limit=10
+// GET: Automatically builds query strings -> /users?role=admin
 api.get({
   url: "/users", 
-  data: { role: "admin", limit: 10 }, 
-  headers: { "X-Client": "My App" }
-}).then(res => res.json()).then(console.log);
+  data: { role: "admin" }
+}).then(res => res.json());
 
-// 3. POST: Automatically encodes JSON body and sets Content-Type
+// POST: Automatically encodes JSON body
 api.post({
   url: "/users",
-  data: { username: "johndoe", password: "123" }
-}).then(res => console.log(res.status));
-```
-
-### 2. Authorization and Security
-
-```javascript
-const api = new uFetch("https://secure.example.com");
-
-// Method Chaining to apply Global Authentication for all future requests
-api.setBearerAuthorization("eyXXXXXX...")
-   .addHeader("Application-Id", "987654");
-
-// Start a heavyweight request
-const req = api.get({ url: "/heavy-data" });
-
-// Decide to cancel it due to timeout
-setTimeout(() => {
-  api.abort("Takes too long!");
-}, 2000);
-
-req.catch(err => {
-  console.log(err.name); // Will output: "AbortError"
+  data: { username: "johndoe" }
 });
 ```
 
-### 3. Fail-Safe Parallel Batch Processing
-
-Run a controlled pool of concurrent HTTP requests. It will never crash the overall Promise if a single node returns an error code or loses network.
+### 2. Fail-Safe Parallel Batch Processing
+Run a controlled pool of concurrent HTTP requests. It will never crash the overall Promise if a single request fails.
 
 ```javascript
-const api = new uFetch();
-const userIds = [{ id: 1 }, { id: 2 }, { id: 999 }]; // 999 triggers 404 naturally
+const api = new uFetch("https://api.example.com");
+const items = [
+  { id: 1 }, 
+  { id: 2, method: "PUT" }, // Override method for this specific item
+  { url: "https://other-api.com/log", data: { msg: "test" } } // Complete override
+];
 
-const results = await api.batch(userIds, {
-  concurrency: 2, // Maximum of 2 parallel workers (Channels)
-  method: "GET",
-  buildRequest: (item) => ({
-    url: `https://api.example.com/users/${item.id}`,
-  }),
-  onProgress: (info) => {
-    // Monitored dynamically per finished node
-    console.log(`[${info.completed}/${info.total}] Done.`);
-    if (info.isError) {
-      console.warn(`Item ${info.item.id} crashed with code ${info.httpCode}`);
-    }
-  }
+const results = await api.batch("/users", "POST", items, {}, {}, {
+  concurrency: 5,
+  onProgress: (info) => console.log(`Progress: ${info.completed}/${info.total}`)
 });
 
-// Final mapping structure is strictly ordered guaranteeing response-to-item locality
-console.log(results[2].isError); // true
-console.log(results[2].httpCode); // 404
+// Response Schema for each item in results:
+// { isError: boolean, httpCode: number|null, response?: Response, error?: any }
 ```
 
 ---
@@ -102,28 +71,34 @@ console.log(results[2].httpCode); // 404
 ## 📚 API Reference
 
 ### `class uFetch`
+
 #### `constructor(url?: string, redirect_in_unauthorized?: string)`
-* `url`: Default Fallback URL if individual requests omit `.url`.
-* `redirect_in_unauthorized`: Redirection path if a 401 pops up (Browser only).
+* `url`: Default base URL for relative paths.
+* `redirect_in_unauthorized`: URL to redirect to on 401 (Browser only).
 
-#### Concurrency & Lifecycle
-* `batch(items: Array, config: Object) => Promise<Array>`: The definitive native Pool runner wrapper. Config accepts: `concurrency`, `method`, `buildRequest(item)`, and `onProgress(info)`.
-* `abort(reason?: any)`: Clears out all in-progress requests tied to this instance context.
+#### `request(url, method, data, headers, options) => Promise<Response>`
+* Core method for all requests.
+* `data`: Query parameters for GET/HEAD, Body for others.
 
-#### Security Adjustments
-* `setBasicAuthorization(username, password)`: Sets `Basic` Header.
-* `setBearerAuthorization(token)`: Overrides and sets `Bearer` JWT Header.
-* `clearAuthorizationHeader()`: Flushes memory auth instances.
-* `addHeader(key, value)`: Persists an HTTP Header for subsequent fetching limits.
+#### `batch(url, method, items, headers, options, config) => Promise<Array<Result>>`
+* `url`: Base URL.
+* `method`: Base HTTP method.
+* `items`: Array of data payloads or override objects.
+* `config`: `{ concurrency: 5, onProgress: Function }`.
 
-#### Standard Verbs (HTTP)
-Simplified access wrappers carrying standard Node Fetch definitions:
-* `get(opts)`
-* `post(opts)`
-* `put(opts)`
-* `patch(opts)`
-* `delete(opts)`
+#### `get | post | put | patch | delete (opts)`
+* Convenience wrappers for `request`. 
+* `opts`: `{ url, data, headers, options }`.
 
-> **Alias Compatibility:** `GET()`, `POST()`, `PATCH()`, `DELETE()` and `PUT()` mapped identically but labeled as deprecated to align with modern JavaScript `camelCase` conventions. 
+#### `setBasicAuthorization(user, pass)` | `setBearerAuthorization(token)`
+* Global authorization helpers that persist for the instance life.
 
-*`options` block in `opts` safely merges explicitly defined properties against internal `AbortSignal` overrides.*
+#### `abort(reason?: any)`
+* Cancels all active requests for this instance.
+
+---
+
+## 🌟 Why @edwinspire/universal-fetch?
+- **Universal**: Works in Node.js 20+ and modern Browsers.
+- **Fail-Safe**: Ideal for bulk data processing where some nodes might fail.
+- **AI-Ready**: Predictable signatures and smart parameter merging.

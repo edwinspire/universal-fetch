@@ -259,6 +259,14 @@ class uFetch {
 
     let finalURL = url || this._url;
 
+    if (url && this._url && !regexIsAbsolute.test(url)) {
+      try {
+        finalURL = new URL(url, this._url).toString();
+      } catch (e) {
+        // Fallback to original validation if URL resolution fails
+      }
+    }
+
     // URL Validation using try-catch for better compatibility
     const baseURL =
       typeof window !== "undefined" ? window.location.href : "http://localhost";
@@ -422,24 +430,37 @@ class uFetch {
    * Processes an array of items in parallel batches with a configured concurrency limit.
    * Tolerates individual errors and reports progress dynamically via a Fail-Safe approach.
    * 
-   * @param {Array<any>} items - Array of items/parameters to process.
-   * @param {Object} config - Configuration object.
-   * @param {number} [config.concurrency=5] - Maximum parallel requests running at the same time.
-   * @param {string} [config.method="GET"] - Base HTTP method to use if buildRequest doesn't specify one.
-   * @param {Function} config.buildRequest - Callback (item) => ({url?, data?, headers?, options?})
-   * @param {Function} [config.onProgress] - Callback (info) => void where info contains progress details and response status.
-   * @returns {Promise<Array<{isError: boolean, httpCode: number|null, response?: Response, error?: any}>>} Array of mapped responses.
+  /**
+   * Processes an array of items in parallel batches with a configured concurrency limit (Pool).
+   * Highly optimized for AI Agents and bulk data processing.
+   * 
+   * LOGIC FOR ITEMS:
+   * 1. If 'item' is a primitive or an object without special keys, it's sent as 'data' (body/query).
+   * 2. If 'item' contains any of {url, method, data, headers, options}, it OVERRIDES the base parameters for that iteration.
+   * 
+   * @param {string} url - Base URL for requests (fallback).
+   * @param {string} [method="GET"] - Base HTTP verb (fallback).
+   * @param {Array<any>} [items=[]] - Collection to process. Supports raw data or override-config objects.
+   * @param {Object} [headers={}] - Base headers to merge.
+   * @param {Object} [options={}] - Base Fetch options (RequestInit).
+   * @param {Object} [config={}] - Batch settings.
+   * @param {number} [config.concurrency=5] - Parallel worker limit.
+   * @param {Function} [config.onProgress] - Callback invoked after each request resolution: (info) => void.
+   * @returns {Promise<Array<{isError: boolean, httpCode: number|null, response?: Response, error?: any}>>} Array of result descriptors (ordered).
    */
-  async batch(items, config = {}) {
-    const {
-      concurrency = 5,
-      method = "GET",
-      buildRequest,
-      onProgress
-    } = config;
+  async batch(
+    url,
+    method = "GET",
+    items = [],
+    headers = {},
+    options = {},
+    config = {}
+  ) {
+    const { concurrency = 5, onProgress } = config;
 
-    if (!Array.isArray(items)) throw new Error("batch() expects an array of items");
-    if (typeof buildRequest !== "function") throw new Error("batch() requires a buildRequest function");
+    if (!Array.isArray(items)) {
+      throw new Error("batch() expects an array of items");
+    }
 
     const total = items.length;
     const results = new Array(total);
@@ -453,13 +474,31 @@ class uFetch {
         let resultPayload;
 
         try {
-          const reqConfig = buildRequest(item);
+          let reqUrl = url;
+          let reqMethod = method;
+          let reqData = item;
+          let reqHeaders = headers;
+          let reqOptions = options;
+
+          // Smart detection: if item is an object that looks like a request config, use it to override base params
+          if (
+            typeof item === "object" &&
+            item !== null &&
+            (item.url || item.method || item.hasOwnProperty("data") || item.headers || item.options)
+          ) {
+            reqUrl = item.url || url;
+            reqMethod = item.method || method;
+            reqData = item.hasOwnProperty("data") ? item.data : item;
+            reqHeaders = item.headers ? { ...headers, ...item.headers } : headers;
+            reqOptions = item.options ? { ...options, ...item.options } : options;
+          }
+
           const response = await this.request(
-            reqConfig.url, 
-            reqConfig.method || method, 
-            reqConfig.data, 
-            reqConfig.headers, 
-            reqConfig.options
+            reqUrl,
+            reqMethod,
+            reqData,
+            reqHeaders,
+            reqOptions
           );
 
           resultPayload = {
@@ -471,7 +510,7 @@ class uFetch {
           resultPayload = {
             isError: true,
             error: error,
-            httpCode: null
+            httpCode: null,
           };
         }
 
@@ -486,7 +525,7 @@ class uFetch {
             isError: resultPayload.isError,
             httpCode: resultPayload.httpCode,
             error: resultPayload.error,
-            response: resultPayload.response
+            response: resultPayload.response,
           });
         }
       }

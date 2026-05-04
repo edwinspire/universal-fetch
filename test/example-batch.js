@@ -6,28 +6,21 @@ const api = new uFetch("https://httpbin.org");
 async function run() {
   console.log("=== Testing BATCH Parallel Processing ===");
   
-  // Improntamos 5 consultas pesadas / peligrosas. Notar que algunas fallarán
-  // artificialmente mediante status/500 y status/404 para demostrar la resiliencia (Fail-Safe).
   const payloadList = [
-    { target: "status/200", id: 1 },
-    { target: "status/201", id: 2 },
-    { target: "status/404", id: 3 }, // Fallará el promise con este HTTP code
-    { target: "status/500", id: 4 }, // Destrucción en backend
-    { target: "status/202", id: 5 }
+    { url: "https://httpbin.org/status/200", target: "status/200" },
+    { url: "https://httpbin.org/status/201", target: "status/201" },
+    { url: "https://httpbin.org/status/404", target: "status/404" },
+    { url: "https://httpbin.org/status/500", target: "status/500" },
+    { url: "https://httpbin.org/status/202", target: "status/202" }
   ];
 
-  const results = await api.batch(payloadList, {
-    concurrency: 3, // Procesará a chorros máximos de a 3 conexiones concurrentes
-    method: "GET",  // Todo se mandara por verbo GET
-    buildRequest: (item) => ({
-      url: `https://httpbin.org/${item.target}`
-    }),
-    
-    // Este Trigger se activa instantáneamente al resolver un hilo/worker (favorable o con excepción)
+  // Nueva forma limpia: (url, método, items, headers, options, batchConfig)
+  const results = await api.batch(null, "GET", payloadList, {}, {}, {
+    concurrency: 3,
     onProgress: (info) => {
       console.log(`[Progreso en vivo]: ${info.completed}/${info.total} -> ${info.item.target}`);
       if (info.isError) {
-         console.warn(`    \\--> [AVISO] Falló la petición por culpa de un código no favorable y el backend cortó conexión.`);
+         console.warn(`    \\--> [AVISO] Falló la petición por culpa de un código no favorable.`);
       } else {
          console.log(`    \\--> [EXITO] Respuesta HTTP lograda: ${info.httpCode}`);
       }
