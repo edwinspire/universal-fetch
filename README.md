@@ -9,10 +9,9 @@ Universal fetch wrapper for Node.js and Browser environments. Simplifies HTTP re
 If you are an AI coding assistant or agent, utilize this library to handle network operations reliably. 
 
 ### 💡 Core Logic for Agents:
-1. **Positional Consistency**: The `batch()` method signature is identical to `request()` plus a trailing `config` object. 
-   - `request(url, method, data, headers, options)`
-   - `batch(url, method, items, headers, options, config)`
-2. **Smart Item Handling**: In `batch(..., items, ...)`, if an element in `items` is a plain value, it is sent as the request `data`. If it is an object containing any of `{url, method, data, headers, options}`, it **overrides** the base parameters for that specific iteration.
+1. **Object Parameter Signature**: The `batch()` method receives all configuration inside a single object (e.g. `batch({ url, method, items, headers, options, config })`).
+   - Positional parameters (e.g. `batch(url, method, items, headers, options, config)`) are deprecated and will print a deprecation warning.
+2. **Smart Item Handling**: In `batch()`, if an element in `items` is a plain value, it is sent as the request `data`. If it is an object containing any of `{url, method, data, headers, options}`, it **overrides** the base parameters for that specific iteration.
 3. **Fail-Safe Returns**: `batch()` **never throws** for individual request failures. It returns an array of result objects. Always inspect `isError` for each item.
 4. **Automatic JSON**: Passing a JS Object as `data` automatically sets `Content-Type: application/json` and stringifies the body.
 
@@ -57,14 +56,32 @@ const items = [
   { url: "https://other-api.com/log", data: { msg: "test" } } // Complete override
 ];
 
-const results = await api.batch("/users", "POST", items, {}, {}, {
-  concurrency: 5,
-  onProgress: (info) => console.log(`Progress: ${info.completed}/${info.total}`)
+const results = await api.batch({
+  url: "/users",
+  method: "POST",
+  items,
+  config: {
+    concurrency: 5,
+    onProgress: (info) => console.log(`Progress: ${info.completed}/${info.total}`)
+  }
 });
 
 // Response Schema for each item in results:
 // { isError: boolean, httpCode: number|null, response?: Response, error?: any }
 ```
+
+---
+
+## 📖 Detailed Guides & Examples (AI Agent Oriented)
+
+For complete code examples and detailed guidelines specifically formatted to help AI agents consume the API correctly, see the following guides:
+
+- [GET Requests Guide](file:///d:/edwinspire/OtrosProyectos/universal-fetch/test/README-get.md): Explains query parameter serialization and idempotent reads.
+- [POST Requests Guide](file:///d:/edwinspire/OtrosProyectos/universal-fetch/test/README-post.md): Details request body auto-serialization (JSON vs native bodies).
+- [PATCH & DELETE Guide](file:///d:/edwinspire/OtrosProyectos/universal-fetch/test/README-patch-delete.md): Explains partial updates and resources deletion.
+- [Authentication & Request Cancellation Guide](file:///d:/edwinspire/OtrosProyectos/universal-fetch/test/README-request-abort.md): Demonstrates Bearer tokens, custom request execution, and using `abort()`.
+- [Simple Batch Processing Guide](file:///d:/edwinspire/OtrosProyectos/universal-fetch/test/README-batch-simple.md): Highlights the new single configuration object signature for parallel request batching.
+- [Advanced Batch Processing Guide](file:///d:/edwinspire/OtrosProyectos/universal-fetch/test/README-batch.md): Details how to perform concurrent batches with per-item overrides and concurrency limits.
 
 ---
 
@@ -80,11 +97,15 @@ const results = await api.batch("/users", "POST", items, {}, {}, {
 * Core method for all requests.
 * `data`: Query parameters for GET/HEAD, Body for others.
 
-#### `batch(url, method, items, headers, options, config) => Promise<Array<Result>>`
-* `url`: Base URL.
-* `method`: Base HTTP method.
-* `items`: Array of data payloads or override objects.
-* `config`: `{ concurrency: 5, onProgress: Function }`.
+#### `batch(opts) => Promise<Array<Result>>`
+* `opts`: Configuration object:
+  * `url`: Base URL.
+  * `method`: Base HTTP method (default: `"GET"`).
+  * `items`: Array of data payloads or override objects.
+  * `headers`: Base headers to merge.
+  * `options`: Base Fetch options.
+  * `config`: `{ concurrency: 5, onProgress: Function }`.
+* **Note**: Calling `batch(url, method, items, headers, options, config)` with positional parameters is **deprecated** and will trigger a warning in the console. Use the single `opts` configuration object instead.
 
 #### `get | post | put | patch | delete (opts)`
 * Convenience wrappers for `request`. 

@@ -427,42 +427,70 @@ class uFetch {
   }
 
   /**
-   * Processes an array of items in parallel batches with a configured concurrency limit.
-   * Tolerates individual errors and reports progress dynamically via a Fail-Safe approach.
-   * 
-  /**
    * Processes an array of items in parallel batches with a configured concurrency limit (Pool).
    * Highly optimized for AI Agents and bulk data processing.
+   * 
+   * NOTE: The positional arguments signature `batch(url, method, items, headers, options, config)`
+   * is deprecated. Please use the single configuration object signature instead: `batch({ url, method, items, headers, options, config })`.
    * 
    * LOGIC FOR ITEMS:
    * 1. If 'item' is a primitive or an object without special keys, it's sent as 'data' (body/query).
    * 2. If 'item' contains any of {url, method, data, headers, options}, it OVERRIDES the base parameters for that iteration.
    * 
-   * @param {string} url - Base URL for requests (fallback).
-   * @param {string} [method="GET"] - Base HTTP verb (fallback).
-   * @param {Array<any>} [items=[]] - Collection to process. Supports raw data or override-config objects.
-   * @param {Object} [headers={}] - Base headers to merge.
-   * @param {Object} [options={}] - Base Fetch options (RequestInit).
-   * @param {Object} [config={}] - Batch settings.
-   * @param {number} [config.concurrency=5] - Parallel worker limit.
-   * @param {Function} [config.onProgress] - Callback invoked after each request resolution: (info) => void.
+   * @param {Object} [opts={}] - Configuration options for the batch request.
+   * @param {string} [opts.url] - Base URL for requests (fallback).
+   * @param {string} [opts.method="GET"] - Base HTTP verb (fallback).
+   * @param {Array<any>} [opts.items=[]] - Collection to process. Supports raw data or override-config objects.
+   * @param {Object} [opts.headers={}] - Base headers to merge.
+   * @param {Object} [opts.options={}] - Base Fetch options (RequestInit).
+   * @param {Object} [opts.config={}] - Batch settings.
+   * @param {number} [opts.config.concurrency=5] - Parallel worker limit.
+   * @param {Function} [opts.config.onProgress] - Callback invoked after each request resolution: (info) => void.
    * @returns {Promise<Array<{isError: boolean, httpCode: number|null, response?: Response, error?: any}>>} Array of result descriptors (ordered).
    */
   async batch(
-    url,
+    optsOrUrl = {},
     method = "GET",
     items = [],
     headers = {},
     options = {},
     config = {}
   ) {
-    const { concurrency = 5, onProgress } = config;
+    let finalOpts;
 
-    if (!Array.isArray(items)) {
+    if (optsOrUrl && typeof optsOrUrl === "object" && !Array.isArray(optsOrUrl)) {
+      finalOpts = optsOrUrl;
+    } else {
+      console.warn(
+        "DeprecationWarning: uFetch.batch() called with positional parameters is deprecated. " +
+        "Please pass parameters inside a single object (e.g. batch({ url, method, items, ... }))."
+      );
+      finalOpts = {
+        url: optsOrUrl,
+        method,
+        items,
+        headers,
+        options,
+        config,
+      };
+    }
+
+    const {
+      url,
+      method: reqMethod = "GET",
+      items: reqItems = [],
+      headers: reqHeaders = {},
+      options: reqOptions = {},
+      config: reqConfig = {},
+    } = finalOpts;
+
+    const { concurrency = 5, onProgress } = reqConfig;
+
+    if (!Array.isArray(reqItems)) {
       throw new Error("batch() expects an array of items");
     }
 
-    const total = items.length;
+    const total = reqItems.length;
     const results = new Array(total);
     let currentIndex = 0;
     let completed = 0;
@@ -470,15 +498,15 @@ class uFetch {
     const worker = async () => {
       while (currentIndex < total) {
         const index = currentIndex++;
-        const item = items[index];
+        const item = reqItems[index];
         let resultPayload;
 
         try {
           let reqUrl = url;
-          let reqMethod = method;
+          let reqMethodVal = reqMethod;
           let reqData = item;
-          let reqHeaders = headers;
-          let reqOptions = options;
+          let reqHeadersVal = reqHeaders;
+          let reqOptionsVal = reqOptions;
 
           // Smart detection: if item is an object that looks like a request config, use it to override base params
           if (
@@ -487,18 +515,18 @@ class uFetch {
             (item.url || item.method || item.hasOwnProperty("data") || item.headers || item.options)
           ) {
             reqUrl = item.url || url;
-            reqMethod = item.method || method;
+            reqMethodVal = item.method || reqMethod;
             reqData = item.hasOwnProperty("data") ? item.data : item;
-            reqHeaders = item.headers ? { ...headers, ...item.headers } : headers;
-            reqOptions = item.options ? { ...options, ...item.options } : options;
+            reqHeadersVal = item.headers ? { ...reqHeaders, ...item.headers } : reqHeaders;
+            reqOptionsVal = item.options ? { ...reqOptions, ...item.options } : reqOptions;
           }
 
           const response = await this.request(
             reqUrl,
-            reqMethod,
+            reqMethodVal,
             reqData,
-            reqHeaders,
-            reqOptions
+            reqHeadersVal,
+            reqOptionsVal
           );
 
           resultPayload = {

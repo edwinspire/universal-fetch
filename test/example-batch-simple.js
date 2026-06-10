@@ -14,12 +14,16 @@ async function run() {
 
   console.log("Enviando usuarios en lote...");
 
-  // Ahora podemos pasar la URL, el método y los items directamente.
-  // No necesitamos definir un callback buildRequest si el item ya es el cuerpo de la petición.
-  const results = await api.batch("https://httpbin.org/post", "POST", users, {}, {}, {
-    concurrency: 2,
-    onProgress: (info) => {
-      console.log(`[Progreso]: ${info.completed}/${info.total} -> ${info.item.name}`);
+  // Ahora podemos pasar las opciones en un único objeto de configuración.
+  const results = await api.batch({
+    url: "https://httpbin.org/post",
+    method: "POST",
+    items: users,
+    config: {
+      concurrency: 2,
+      onProgress: (info) => {
+        console.log(`[Progreso]: ${info.completed}/${info.total} -> ${info.item.name}`);
+      }
     }
   });
 

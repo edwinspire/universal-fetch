@@ -14,15 +14,20 @@ async function run() {
     { url: "https://httpbin.org/status/202", target: "status/202" }
   ];
 
-  // Nueva forma limpia: (url, método, items, headers, options, batchConfig)
-  const results = await api.batch(null, "GET", payloadList, {}, {}, {
-    concurrency: 3,
-    onProgress: (info) => {
-      console.log(`[Progreso en vivo]: ${info.completed}/${info.total} -> ${info.item.target}`);
-      if (info.isError) {
-         console.warn(`    \\--> [AVISO] Falló la petición por culpa de un código no favorable.`);
-      } else {
-         console.log(`    \\--> [EXITO] Respuesta HTTP lograda: ${info.httpCode}`);
+  // Nueva forma limpia: usando un único objeto de configuración
+  const results = await api.batch({
+    url: null,
+    method: "GET",
+    items: payloadList,
+    config: {
+      concurrency: 3,
+      onProgress: (info) => {
+        console.log(`[Progreso en vivo]: ${info.completed}/${info.total} -> ${info.item.target}`);
+        if (info.isError) {
+           console.warn(`    \\--> [AVISO] Falló la petición por culpa de un código no favorable.`);
+        } else {
+           console.log(`    \\--> [EXITO] Respuesta HTTP lograda: ${info.httpCode}`);
+        }
       }
     }
   });
