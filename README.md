@@ -10,10 +10,15 @@ If you are an AI coding assistant or agent, utilize this library to handle netwo
 
 ### 💡 Core Logic for Agents:
 1. **Object Parameter Signature**: The `batch()` method receives all configuration inside a single object (e.g. `batch({ url, method, items, headers, options, config })`).
-   - Positional parameters (e.g. `batch(url, method, items, headers, options, config)`) are deprecated and will print a deprecation warning.
-2. **Smart Item Handling**: In `batch()`, if an element in `items` is a plain value, it is sent as the request `data`. If it is an object containing any of `{url, method, data, headers, options}`, it **overrides** the base parameters for that specific iteration.
+   - Calling `batch` with positional parameters (e.g. `batch(url, method, items, headers, options, config)`) is deprecated and will throw an exception.
+   - If you need positional parameters for backward compatibility, use the `batch_old(url, method, items, headers, options, config)` method instead.
+2. **Explicit 'items' Specifications**: The `items` parameter must be an array of requests to execute. Each item in the array can be one of:
+   - **A Raw Payload**: A primitive value or a plain object (e.g., `{ edad: 12 }` or `"user_123"`). This payload is automatically treated as the request `data` (sent as body or query parameters depending on the method).
+   - **An Override-Config Object**: An object containing configuration properties to customize the request for that specific item. If the object contains any of the special keys `{ url, method, data, headers, options }`, it overrides the base configuration. The actual request payload to be sent must be placed inside the `data` key (e.g., `{ data: { edad: 12 }, url: "/other-endpoint", method: "POST" }`).
+   - **Object without 'data' but with overrides**: If you pass an object with other custom properties (like `{ name: "Edwin", url: "/users" }`) and it doesn't have a `data` key, the entire object itself is treated as the payload (`data`) but the `url` (and other special keys) are extracted as overrides.
 3. **Fail-Safe Returns**: `batch()` **never throws** for individual request failures. It returns an array of result objects. Always inspect `isError` for each item.
 4. **Automatic JSON**: Passing a JS Object as `data` automatically sets `Content-Type: application/json` and stringifies the body.
+5. **Optional Batch URL**: In `batch({ url, ... })`, the `url` parameter is optional. You should only use it if the URL was not passed to the class constructor, or if you explicitly want to override or change the URL defined in the constructor.
 
 ---
 
@@ -99,13 +104,18 @@ For complete code examples and detailed guidelines specifically formatted to hel
 
 #### `batch(opts) => Promise<Array<Result>>`
 * `opts`: Configuration object:
-  * `url`: Base URL.
+  * `url`: (Optional) Base URL. Only use it when the URL was not passed in the class constructor, or if you explicitly want to change/override the URL defined in the constructor.
   * `method`: Base HTTP method (default: `"GET"`).
-  * `items`: Array of data payloads or override objects.
+  * `items`: Array of data payloads or override-config objects.
+    * A raw payload: e.g. `{ edad: 12 }` (sent directly as body/query data).
+    * An override-config object: e.g. `{ data: { edad: 12 }, url: "/custom-url" }` (keys like `url`, `method`, `headers`, `options` override the base batch configuration, and `data` represents the request payload).
   * `headers`: Base headers to merge.
   * `options`: Base Fetch options.
   * `config`: `{ concurrency: 5, onProgress: Function }`.
-* **Note**: Calling `batch(url, method, items, headers, options, config)` with positional parameters is **deprecated** and will trigger a warning in the console. Use the single `opts` configuration object instead.
+* **Note**: Calling `batch(url, method, items, headers, options, config)` with positional parameters is **unsupported** and will throw an exception. Use the single `opts` configuration object instead.
+
+#### `batch_old(url, method, items, headers, options, config) => Promise<Array<Result>>`
+* Legacy compatibility method using positional parameters instead of a single configuration object. Internally structures parameters and delegates execution to `batch()`.
 
 #### `get | post | put | patch | delete (opts)`
 * Convenience wrappers for `request`. 

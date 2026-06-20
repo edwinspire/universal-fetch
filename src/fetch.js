@@ -430,17 +430,26 @@ class uFetch {
    * Processes an array of items in parallel batches with a configured concurrency limit (Pool).
    * Highly optimized for AI Agents and bulk data processing.
    * 
-   * NOTE: The positional arguments signature `batch(url, method, items, headers, options, config)`
-   * is deprecated. Please use the single configuration object signature instead: `batch({ url, method, items, headers, options, config })`.
+   * NOTE: The signature batch(url, method, items, headers, options, config) with positional arguments
+   * is deprecated and will now throw an exception. Use the single configuration object instead.
+   * If you explicitly need to use positional parameters, use the batch_old() method.
    * 
-   * LOGIC FOR ITEMS:
-   * 1. If 'item' is a primitive or an object without special keys, it's sent as 'data' (body/query).
-   * 2. If 'item' contains any of {url, method, data, headers, options}, it OVERRIDES the base parameters for that iteration.
+   * NOTE ON URL PARAMETER:
+   * The `url` field in the batch input parameters is optional. It should only be used if the URL was not passed to the class constructor, or if you explicitly want to override/change the URL defined in the class constructor.
    * 
-   * @param {Object} [opts={}] - Configuration options for the batch request.
-   * @param {string} [opts.url] - Base URL for requests (fallback).
+   * SPECIFICATIONS FOR THE 'items' PROPERTY (CRITICAL FOR AI AGENTS):
+   * The 'items' parameter must be an Array. Each element in the array is processed as a separate request and can be:
+   * 1. A RAW PAYLOAD: A primitive value or a plain object without special keys (e.g. `{ edad: 12 }` or `"some-id"`).
+   *    - It is automatically treated as the request `data` (sent as the request body or query string according to the HTTP method).
+   * 2. An OVERRIDE-CONFIG OBJECT: An object containing any of these special keys: `{ url, method, data, headers, options }`.
+   *    - It merges with and overrides the base configuration parameters for that specific item's request (e.g. changing the endpoint or the method for a single item).
+   *    - When using this form, the actual payload to be sent must be placed inside the `data` key (e.g. `{ data: { edad: 12 }, url: "/special-endpoint", method: "POST" }`).
+   *    - If you pass an object with other keys (like `{ name: "Edwin", url: "/users" }`) and it doesn't have a `data` key, the entire object is treated as the payload (`data`) but the `url` (and other special keys) are extracted as overrides.
+   * 
+   * @param {Object} opts - Configuration options for the batch request.
+   * @param {string} [opts.url] - (Optional) Base URL for requests (fallback). Should only be used when no URL was passed in the constructor, or if you explicitly want to change the URL defined in the constructor.
    * @param {string} [opts.method="GET"] - Base HTTP verb (fallback).
-   * @param {Array<any>} [opts.items=[]] - Collection to process. Supports raw data or override-config objects.
+   * @param {Array<any>} opts.items - Collection to process. Supports raw data or override-config objects.
    * @param {Object} [opts.headers={}] - Base headers to merge.
    * @param {Object} [opts.options={}] - Base Fetch options (RequestInit).
    * @param {Object} [opts.config={}] - Batch settings.
@@ -448,31 +457,23 @@ class uFetch {
    * @param {Function} [opts.config.onProgress] - Callback invoked after each request resolution: (info) => void.
    * @returns {Promise<Array<{isError: boolean, httpCode: number|null, response?: Response, error?: any}>>} Array of result descriptors (ordered).
    */
-  async batch(
-    optsOrUrl = {},
-    method = "GET",
-    items = [],
-    headers = {},
-    options = {},
-    config = {}
-  ) {
-    let finalOpts;
-
-    if (optsOrUrl && typeof optsOrUrl === "object" && !Array.isArray(optsOrUrl)) {
-      finalOpts = optsOrUrl;
-    } else {
-      console.warn(
-        "DeprecationWarning: uFetch.batch() called with positional parameters is deprecated. " +
-        "Please pass parameters inside a single object (e.g. batch({ url, method, items, ... }))."
+  async batch(opts = {}) {
+    if (arguments.length > 1) {
+      throw new Error(
+        "uFetch.batch() now only accepts a single configuration object parameter. " +
+        "If you need to use the deprecated positional arguments signature, please use uFetch.batch_old() instead."
       );
-      finalOpts = {
-        url: optsOrUrl,
-        method,
-        items,
-        headers,
-        options,
-        config,
-      };
+    }
+
+    if (typeof opts !== "object" || opts === null || Array.isArray(opts)) {
+      throw new Error(
+        "uFetch.batch() expects a single configuration object containing options (e.g., { url, method, items, headers, options, config }). " +
+        "To use the deprecated positional arguments signature, please use uFetch.batch_old() instead."
+      );
+    }
+
+    if (!opts.hasOwnProperty("items")) {
+      throw new Error("uFetch.batch() requires the 'items' parameter inside the configuration object.");
     }
 
     const {
@@ -482,7 +483,7 @@ class uFetch {
       headers: reqHeaders = {},
       options: reqOptions = {},
       config: reqConfig = {},
-    } = finalOpts;
+    } = opts;
 
     const { concurrency = 5, onProgress } = reqConfig;
 
@@ -567,6 +568,37 @@ class uFetch {
 
     await Promise.all(workers);
     return results;
+  }
+
+  /**
+   * Processes an array of items in parallel batches using the legacy positional arguments signature.
+   * Internally maps parameters and calls the modern batch() method.
+   * 
+   * @deprecated Use batch() instead.
+   * @param {string} [url=undefined]
+   * @param {string} [method="GET"]
+   * @param {Array<any>} [items=[]]
+   * @param {Object} [headers={}]
+   * @param {Object} [options={}]
+   * @param {Object} [config={}]
+   * @returns {Promise<Array<{isError: boolean, httpCode: number|null, response?: Response, error?: any}>>}
+   */
+  async batch_old(
+    url = undefined,
+    method = "GET",
+    items = [],
+    headers = {},
+    options = {},
+    config = {}
+  ) {
+    return this.batch({
+      url,
+      method,
+      items,
+      headers,
+      options,
+      config,
+    });
   }
 }
 

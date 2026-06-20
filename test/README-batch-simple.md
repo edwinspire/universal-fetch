@@ -12,7 +12,7 @@ The `batch` method runs multiple requests in parallel with a pool concurrency li
 1. **Signature**:
    ```javascript
    api.batch({
-     url: string,
+     url?: string, // Optional: Only if URL not passed in constructor, or to explicitly override it.
      method: string,
      items: Array<any>,
      headers?: Object,
@@ -23,8 +23,9 @@ The `batch` method runs multiple requests in parallel with a pool concurrency li
      }
    })
    ```
-2. **Positional Arguments Deprecation**: Positional parameters are deprecated. Always wrap options inside a single configuration object.
-3. **Execution**:
+2. **Positional Arguments Restriction**: Positional parameters are unsupported in `batch()` and will throw an exception. Always wrap options inside a single configuration object. If positional parameters are strictly required for legacy integration, use the `batch_old()` method instead.
+3. **Optional Batch URL Parameter**: The `url` field in the batch options is optional. It should only be supplied when the class constructor was not instantiated with a base URL, or if you explicitly want to override or change the URL defined in the constructor.
+4. **Execution**:
    ```javascript
    const users = [
      { name: "Edwin", email: "edwin@example.com" },
