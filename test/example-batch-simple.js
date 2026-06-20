@@ -27,9 +27,12 @@ async function run() {
     }
   });
 
-  console.log("\nResultados:");
+  console.log("\nResultados (por defecto, no se incluye el objeto response para ahorrar peso):");
   results.forEach((res, i) => {
-    console.log(`Usuario ${users[i].name}: HTTP ${res.httpCode}`);
+    // httpbin.org/post devuelve los datos enviados en la propiedad "json" del body
+    const echoedUser = res.data && res.data.json ? JSON.stringify(res.data.json) : "N/A";
+    const hasResponse = res.response ? "Sí" : "No";
+    console.log(`Usuario ${users[i].name}: HTTP ${res.httpCode} | ¿Tiene response?: ${hasResponse} | Datos devueltos: ${echoedUser}`);
   });
 }
 

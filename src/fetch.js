@@ -28,6 +28,22 @@ const validMethods = new Set([
   "TRACE",
 ]);
 
+const defaultResponseParser = async (response) => {
+  if (response.status === 204) {
+    return null;
+  }
+  const contentType = response.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
+    return await response.json();
+  }
+  const text = await response.text();
+  try {
+    return JSON.parse(text);
+  } catch (err) {
+    return text;
+  }
+};
+
 /**
  * uFetch class: Universal and AI-friendly wrapper for HTTP requests (based on 'fetch').
  * Provides tools to automatically handle relative/absolute URLs, JSON bodies,
@@ -455,7 +471,9 @@ class uFetch {
    * @param {Object} [opts.config={}] - Batch settings.
    * @param {number} [opts.config.concurrency=5] - Parallel worker limit.
    * @param {Function} [opts.config.onProgress] - Callback invoked after each request resolution: (info) => void.
-   * @returns {Promise<Array<{isError: boolean, httpCode: number|null, response?: Response, error?: any}>>} Array of result descriptors (ordered).
+   * @param {Function} [opts.config.responseParser] - (Optional) Custom extractor function for the response payload: async (response) => data.
+   * @param {boolean} [opts.config.includeResponse=false] - (Optional) If true, includes the raw Fetch 'response' object in the result descriptor.
+   * @returns {Promise<Array<{isError: boolean, httpCode: number|null, data?: any, response?: Response, error?: any}>>} Array of result descriptors (ordered).
    */
   async batch(opts = {}) {
     if (arguments.length > 1) {
@@ -485,7 +503,12 @@ class uFetch {
       config: reqConfig = {},
     } = opts;
 
-    const { concurrency = 5, onProgress } = reqConfig;
+    const {
+      concurrency = 5,
+      onProgress,
+      responseParser,
+      includeResponse = false,
+    } = reqConfig;
 
     if (!Array.isArray(reqItems)) {
       throw new Error("batch() expects an array of items");
@@ -501,6 +524,7 @@ class uFetch {
         const index = currentIndex++;
         const item = reqItems[index];
         let resultPayload;
+        let response = null;
 
         try {
           let reqUrl = url;
@@ -522,7 +546,7 @@ class uFetch {
             reqOptionsVal = item.options ? { ...reqOptions, ...item.options } : reqOptions;
           }
 
-          const response = await this.request(
+          response = await this.request(
             reqUrl,
             reqMethodVal,
             reqData,
@@ -530,17 +554,26 @@ class uFetch {
             reqOptionsVal
           );
 
+          const parser = responseParser || defaultResponseParser;
+          const parsedData = await parser(response);
+
           resultPayload = {
             isError: false,
             httpCode: response.status,
-            response: response,
+            data: parsedData,
           };
+          if (includeResponse) {
+            resultPayload.response = response;
+          }
         } catch (error) {
           resultPayload = {
             isError: true,
             error: error,
-            httpCode: null,
+            httpCode: response ? response.status : null,
           };
+          if (includeResponse && response) {
+            resultPayload.response = response;
+          }
         }
 
         results[index] = resultPayload;
@@ -554,7 +587,8 @@ class uFetch {
             isError: resultPayload.isError,
             httpCode: resultPayload.httpCode,
             error: resultPayload.error,
-            response: resultPayload.response,
+            response: response,
+            data: resultPayload.data,
           });
         }
       }

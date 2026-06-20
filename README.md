@@ -16,7 +16,7 @@ If you are an AI coding assistant or agent, utilize this library to handle netwo
    - **A Raw Payload**: A primitive value or a plain object (e.g., `{ edad: 12 }` or `"user_123"`). This payload is automatically treated as the request `data` (sent as body or query parameters depending on the method).
    - **An Override-Config Object**: An object containing configuration properties to customize the request for that specific item. If the object contains any of the special keys `{ url, method, data, headers, options }`, it overrides the base configuration. The actual request payload to be sent must be placed inside the `data` key (e.g., `{ data: { edad: 12 }, url: "/other-endpoint", method: "POST" }`).
    - **Object without 'data' but with overrides**: If you pass an object with other custom properties (like `{ name: "Edwin", url: "/users" }`) and it doesn't have a `data` key, the entire object itself is treated as the payload (`data`) but the `url` (and other special keys) are extracted as overrides.
-3. **Fail-Safe Returns**: `batch()` **never throws** for individual request failures. It returns an array of result objects. Always inspect `isError` for each item.
+3. **Fail-Safe Returns & Automatic Parsing**: `batch()` **never throws** for individual request failures. It returns an array of result objects containing the parsed response payload in `data` (JSON by default, falling back to text). Always inspect `isError` for each item.
 4. **Automatic JSON**: Passing a JS Object as `data` automatically sets `Content-Type: application/json` and stringifies the body.
 5. **Optional Batch URL**: In `batch({ url, ... })`, the `url` parameter is optional. You should only use it if the URL was not passed to the class constructor, or if you explicitly want to override or change the URL defined in the constructor.
 
@@ -67,12 +67,14 @@ const results = await api.batch({
   items,
   config: {
     concurrency: 5,
-    onProgress: (info) => console.log(`Progress: ${info.completed}/${info.total}`)
+    includeResponse: false, // Default is false to reduce result payload size
+    onProgress: (info) => console.log(`Progress: ${info.completed}/${info.total} -> Data:`, info.data)
   }
 });
 
 // Response Schema for each item in results:
-// { isError: boolean, httpCode: number|null, response?: Response, error?: any }
+// { isError: boolean, httpCode: number|null, data?: any, response?: Response, error?: any }
+// Note: response object is only included if includeResponse: true is explicitly passed.
 ```
 
 ---
@@ -111,7 +113,11 @@ For complete code examples and detailed guidelines specifically formatted to hel
     * An override-config object: e.g. `{ data: { edad: 12 }, url: "/custom-url" }` (keys like `url`, `method`, `headers`, `options` override the base batch configuration, and `data` represents the request payload).
   * `headers`: Base headers to merge.
   * `options`: Base Fetch options.
-  * `config`: `{ concurrency: 5, onProgress: Function }`.
+  * `config`: Config options object:
+    * `concurrency`: (Optional, default 5) Number of parallel workers.
+    * `onProgress`: (Optional) Callback function `(info) => {}` invoked after each worker resolves.
+    * `responseParser`: (Optional) Custom extractor function `async (response) => data`. Defaults to JSON extraction with text fallback.
+    * `includeResponse`: (Optional, default false) Set to `true` to include the raw Fetch `Response` object in the output descriptors.
 * **Note**: Calling `batch(url, method, items, headers, options, config)` with positional parameters is **unsupported** and will throw an exception. Use the single `opts` configuration object instead.
 
 #### `batch_old(url, method, items, headers, options, config) => Promise<Array<Result>>`

@@ -82,6 +82,53 @@ async function run() {
   } catch (error) {
     console.error("batch_old should have worked but failed:", error.message);
   }
+
+  // 7. Test includeResponse (default vs explicit true)
+  try {
+    console.log("\n7. Testing includeResponse flag...");
+    const resultsDefault = await api.batch({
+      url: "https://httpbin.org/post",
+      method: "POST",
+      items: [{ name: "TestDefault" }],
+      config: { concurrency: 1 }
+    });
+    
+    const resultsWithResponse = await api.batch({
+      url: "https://httpbin.org/post",
+      method: "POST",
+      items: [{ name: "TestExplicit" }],
+      config: { concurrency: 1, includeResponse: true }
+    });
+
+    const defaultHasRes = resultsDefault[0].response !== undefined;
+    const explicitHasRes = resultsWithResponse[0].response !== undefined;
+
+    console.log(`- By default, has response? ${defaultHasRes ? "FAIL" : "PASS (No response object, lighter footprint)"}`);
+    console.log(`- With includeResponse: true, has response? ${explicitHasRes ? "PASS (Response object included)" : "FAIL"}`);
+  } catch (error) {
+    console.error("Test 7 failed:", error.message);
+  }
+
+  // 8. Test custom responseParser
+  try {
+    console.log("\n8. Testing custom responseParser...");
+    const resultsCustom = await api.batch({
+      url: "https://httpbin.org/status/201",
+      method: "GET",
+      items: [{ id: 1 }],
+      config: {
+        concurrency: 1,
+        responseParser: async (response) => {
+          return `Parsed-Status-${response.status}`;
+        }
+      }
+    });
+
+    const parsedValue = resultsCustom[0].data;
+    console.log(`- Custom parsed value: "${parsedValue}" -> ${parsedValue === "Parsed-Status-201" ? "PASS" : "FAIL"}`);
+  } catch (error) {
+    console.error("Test 8 failed:", error.message);
+  }
 }
 
 run();

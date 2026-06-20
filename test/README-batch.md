@@ -41,8 +41,12 @@ Additionally, the `items` parameter must be an array of requests to execute. Eac
    });
    ```
 
-## Fail-Safe Approach
+## Fail-Safe Approach & Automatic Parsing
 The batch mechanism is designed to handle network errors, timeouts, or bad HTTP status codes without failing the outer Promise:
 - If a request fails or throws, its index in the output array will have `isError: true` and `error` populated.
 - Other requests in the batch will continue running normally.
-- This is extremely valuable for AI Agents processing bulk actions (e.g. updating 100 database records) where you do not want a single error to abort the entire operation.
+- **Automatic Deserialization**: Response bodies are automatically parsed (JSON by default, with a fallback to raw text) and saved in the `data` property of each result item.
+- **Custom Parsing**: You can provide a custom extraction logic using `config.responseParser: async (response) => data`.
+- **Response footprint reduction**: By default, the heavy `response` object is omitted from results. If you need it, set `config.includeResponse: true`.
+
+This is extremely valuable for AI Agents processing bulk actions (e.g. updating 100 database records) where you do not want a single error to abort the entire operation and want direct access to the parsed output data.

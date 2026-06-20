@@ -19,7 +19,9 @@ The `batch` method runs multiple requests in parallel with a pool concurrency li
      options?: RequestInit,
      config?: {
        concurrency?: number,
-       onProgress?: Function
+       onProgress?: Function,
+       responseParser?: Function,
+       includeResponse?: boolean
      }
    })
    ```
@@ -50,6 +52,7 @@ The `batch` method runs multiple requests in parallel with a pool concurrency li
 `batch` does not throw an overall exception if individual requests fail. It returns an array of result objects in the exact order of the inputs:
 ```javascript
 // results element schema:
-// { isError: boolean, httpCode: number|null, response?: Response, error?: any }
+// { isError: boolean, httpCode: number|null, data?: any, response?: Response, error?: any }
+// Note: response is only included if includeResponse: true is explicitly passed.
 ```
 Always loop through the results and inspect `isError` or `httpCode` to verify the execution of each target item.
