@@ -14,9 +14,22 @@ async function run() {
   
   if (res.ok) {
     const json = await res.json();
-    console.log("Backend recibió efectivamente desde el Request Body:", json.json);
+    console.log("Backend recibió efectivamente desde el Request Body (via data):", json.json);
   } else {
     console.error("POST request falló", res.status);
+  }
+
+  console.log("\n=== Testing POST request using the new 'body' parameter ===");
+  const resBody = await api.post({
+    url: "/post",
+    body: { name: "Jane Doe", profession: "AI Specialist", age: 25 },
+  });
+  
+  if (resBody.ok) {
+    const json = await resBody.json();
+    console.log("Backend recibió efectivamente desde el Request Body (via body):", json.json);
+  } else {
+    console.error("POST request with body falló", resBody.status);
   }
 }
 

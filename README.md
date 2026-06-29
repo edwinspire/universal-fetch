@@ -13,11 +13,11 @@ If you are an AI coding assistant or agent, utilize this library to handle netwo
    - Calling `batch` with positional parameters (e.g. `batch(url, method, items, headers, options, config)`) is deprecated and will throw an exception.
    - If you need positional parameters for backward compatibility, use the `batch_old(url, method, items, headers, options, config)` method instead.
 2. **Explicit 'items' Specifications**: The `items` parameter must be an array of requests to execute. Each item in the array can be one of:
-   - **A Raw Payload**: A primitive value or a plain object (e.g., `{ edad: 12 }` or `"user_123"`). This payload is automatically treated as the request `data` (sent as body or query parameters depending on the method).
-   - **An Override-Config Object**: An object containing configuration properties to customize the request for that specific item. If the object contains any of the special keys `{ url, method, data, headers, options }`, it overrides the base configuration. The actual request payload to be sent must be placed inside the `data` key (e.g., `{ data: { edad: 12 }, url: "/other-endpoint", method: "POST" }`).
-   - **Object without 'data' but with overrides**: If you pass an object with other custom properties (like `{ name: "Edwin", url: "/users" }`) and it doesn't have a `data` key, the entire object itself is treated as the payload (`data`) but the `url` (and other special keys) are extracted as overrides.
+   - **A Raw Payload**: A primitive value or a plain object (e.g., `{ edad: 12 }` or `"user_123"`). This payload is automatically treated as the request `data` (sent as query parameters for `GET`/`HEAD`/`DELETE`, or request body for other methods).
+   - **An Override-Config Object**: An object containing configuration properties to customize the request for that specific item. If the object contains any of the special keys `{ url, method, data, body, headers, options }`, it overrides the base configuration. The query parameters payload must be placed inside the `data` key, and the body payload inside the `body` key.
+   - **Object without 'data'/'body' but with overrides**: If you pass an object with other custom properties (like `{ name: "Edwin", url: "/users" }`) and it doesn't have a `data` or `body` key, the entire object itself is treated as the payload (`data`) but the `url` (and other special keys) are extracted as overrides.
 3. **Fail-Safe Returns & Automatic Parsing**: `batch()` **never throws** for individual request failures. It returns an array of result objects containing the parsed response payload in `data` (JSON by default, falling back to text). Always inspect `isError` for each item.
-4. **Automatic JSON**: Passing a JS Object as `data` automatically sets `Content-Type: application/json` and stringifies the body.
+4. **Automatic JSON**: Passing a JS Object as `body` (or `data` on `POST`/`PUT`/`PATCH`) automatically sets `Content-Type: application/json` and stringifies the body.
 5. **Optional Batch URL**: In `batch({ url, ... })`, the `url` parameter is optional. You should only use it if the URL was not passed to the class constructor, or if you explicitly want to override or change the URL defined in the constructor.
 
 ---
@@ -46,7 +46,19 @@ api.get({
 // POST: Automatically encodes JSON body
 api.post({
   url: "/users",
-  data: { username: "johndoe" }
+  data: { username: "johndoe" } // data maps to body on POST
+});
+
+// DELETE (Query): Automatically builds query string -> /users?id=99
+api.delete({
+  url: "/users",
+  data: { id: 99 }
+});
+
+// DELETE (Body): Explicitly sends data in request body
+api.delete({
+  url: "/users",
+  body: { id: 99, reason: "inactivity" }
 });
 ```
 
@@ -100,9 +112,10 @@ For complete code examples and detailed guidelines specifically formatted to hel
 * `url`: Default base URL for relative paths.
 * `redirect_in_unauthorized`: URL to redirect to on 401 (Browser only).
 
-#### `request(url, method, data, headers, options) => Promise<Response>`
+#### `request(url, method, data, headers, options, body) => Promise<Response>`
 * Core method for all requests.
-* `data`: Query parameters for GET/HEAD, Body for others.
+* `data`: Query parameters for `GET`/`HEAD`/`DELETE`, Body for others (when `body` is not defined).
+* `body`: (Optional) Explicit request body payload. If set, always travels in the request body.
 
 #### `batch(opts) => Promise<Array<Result>>`
 * `opts`: Configuration object:
@@ -110,7 +123,7 @@ For complete code examples and detailed guidelines specifically formatted to hel
   * `method`: Base HTTP method (default: `"GET"`).
   * `items`: Array of data payloads or override-config objects.
     * A raw payload: e.g. `{ edad: 12 }` (sent directly as body/query data).
-    * An override-config object: e.g. `{ data: { edad: 12 }, url: "/custom-url" }` (keys like `url`, `method`, `headers`, `options` override the base batch configuration, and `data` represents the request payload).
+    * An override-config object: e.g. `{ data: { filter: "active" }, body: { edad: 12 }, url: "/custom-url" }` (keys like `url`, `method`, `headers`, `options` override the base batch configuration, `data` overrides query parameters, and `body` overrides request body).
   * `headers`: Base headers to merge.
   * `options`: Base Fetch options.
   * `config`: Config options object:
@@ -125,7 +138,9 @@ For complete code examples and detailed guidelines specifically formatted to hel
 
 #### `get | post | put | patch | delete (opts)`
 * Convenience wrappers for `request`. 
-* `opts`: `{ url, data, headers, options }`.
+* `opts`: `{ url, data, body, headers, options }`.
+  * `data`: Query parameters for `get`/`delete`, request body payload for `post`/`put`/`patch`.
+  * `body`: Explicit request body payload (always sent in HTTP body, takes precedence over `data` for the body).
 
 #### `setBasicAuthorization(user, pass)` | `setBearerAuthorization(token)`
 * Global authorization helpers that persist for the instance life.

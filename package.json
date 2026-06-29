@@ -1,7 +1,7 @@
 {
   "name": "@edwinspire/universal-fetch",
   "description": "Class to use fetch in Nodejs and in the browser",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "author": "edwinspire <edwinspire@gmail.com>",
   "type": "commonjs",
   "engines": {
@@ -22,6 +22,7 @@
     "test:batch": "node test/example-batch.js",
     "test:batch-simple": "node test/example-batch-simple.js",
     "test:abort": "node test/example-request-abort.js",
+    "test:patch-delete": "node test/example-patch-delete.js",
     "set_version": "node ./set_version.js"
   },
   "repository": {

@@ -254,9 +254,10 @@ class uFetch {
    * 
    * @param {string} url - Final absolute URL, or internal relative path.
    * @param {string} [method="GET"] - HTTP verb in uppercase (GET, POST, PUT, DELETE, PATCH, etc).
-   * @param {any} [data=undefined] - The body payload. For GET/HEAD it's sent as a querystring, for other verbs it is automatically converted to a JSON body unless it's a native Stream/Blob/FormData.
+   * @param {any} [data=undefined] - Parameters sent as a querystring for GET/HEAD/DELETE, or as request body for POST/PUT/PATCH (when body is not defined).
    * @param {Object} [headers={}] - Additional dictionary of ephemeral headers living only for this specific transaction.
    * @param {RequestInit} [options={}] - Base object for strict overriding of primitive Fetch options (Credentials, Caching, Mode, custom Signal, etc).
+   * @param {any} [body=undefined] - (Optional) Explicit body payload sent in the request body. If set, takes precedence over data for the HTTP body.
    * @returns {Promise<Response>} Promise resolving to the Fetch Response object.
    * @throws Exception when asynchronous URL validation fails locally or fetch explicitly fails.
    */
@@ -266,6 +267,7 @@ class uFetch {
     data = undefined,
     headers = {},
     options = {},
+    body = undefined,
   ) {
     method = method.toUpperCase();
 
@@ -293,10 +295,15 @@ class uFetch {
       throw new Error("Is required a valid URL " + finalURL);
     }
 
-    const h = this._normalizeHeaders(headers, data);
+    // Compute the actual payload to be sent in the request body
+    const bodyPayload = ["GET", "HEAD", "DELETE"].includes(method)
+      ? body
+      : (body !== undefined ? body : data);
 
-    // GET / HEAD → data como querystring
-    if (["GET", "HEAD"].includes(method) && data && typeof data === "object") {
+    const h = this._normalizeHeaders(headers, bodyPayload);
+
+    // GET / HEAD / DELETE → data como querystring
+    if (["GET", "HEAD", "DELETE"].includes(method) && data && typeof data === "object") {
       const sp = new URLSearchParams(data);
       const queryString = sp.toString();
       if (queryString) {
@@ -314,14 +321,12 @@ class uFetch {
       }
     }
 
-    const body = !["GET", "HEAD"].includes(method)
-      ? this._createBody(data)
-      : undefined;
+    const requestBody = this._createBody(bodyPayload);
 
     const opts = {
       method,
       headers: h,
-      body,
+      body: requestBody,
       ...(this._abortController ? { signal: this._abortController.signal } : {}),
       ...options,
     };
@@ -350,11 +355,11 @@ class uFetch {
 
   /**
    * Triggers a read query ("GET" verb). Automatically and transparently serializes `opts.data` using search query strings (e.g., url?foo=bar).
-   * @param {{url?: string, data?: any, headers?: Object, options?: RequestInit}} opts - Configuration wrapper object (URL, simulated body Data, local headers and init options).
+   * @param {{url?: string, data?: any, body?: any, headers?: Object, options?: RequestInit}} opts - Configuration wrapper object (URL, query params, body payload, local headers and init options).
    * @returns {Promise<Response>} Original HTTP Promise from the `fetch` API.
    */
   get(opts = {}) {
-    return this.request(opts.url, "GET", opts.data, opts.headers, opts.options);
+    return this.request(opts.url, "GET", opts.data, opts.headers, opts.options, opts.body);
   }
 
   /** @deprecated Use get() instead. */
@@ -365,8 +370,8 @@ class uFetch {
 
   /**
    * Triggers a mutation/insertion via an endpoint consuming a "POST" verb.
-   * By default, stringifies the `data` to JSON without encoding, overriding the 'application/json' flag if it is plain.
-   * @param {{url?: string, data?: any, headers?: Object, options?: RequestInit}} opts
+   * By default, stringifies the `data` (or `body` if provided) to JSON without encoding.
+   * @param {{url?: string, data?: any, body?: any, headers?: Object, options?: RequestInit}} opts
    * @returns {Promise<Response>}
    */
   post(opts = {}) {
@@ -376,6 +381,7 @@ class uFetch {
       opts.data,
       opts.headers,
       opts.options,
+      opts.body,
     );
   }
 
@@ -387,11 +393,11 @@ class uFetch {
 
   /**
    * Replaces existing information by injecting the complete data payload to the router using the "PUT" verb.
-   * @param {{url?: string, data?: any, headers?: Object, options?: RequestInit}} opts
+   * @param {{url?: string, data?: any, body?: any, headers?: Object, options?: RequestInit}} opts
    * @returns {Promise<Response>}
    */
   put(opts = {}) {
-    return this.request(opts.url, "PUT", opts.data, opts.headers, opts.options);
+    return this.request(opts.url, "PUT", opts.data, opts.headers, opts.options, opts.body);
   }
 
   /** @deprecated Use put() instead. */
@@ -402,7 +408,7 @@ class uFetch {
 
   /**
    * Controlled backend partial mutation dictated by the "PATCH" verb, modifying fragments.
-   * @param {{url?: string, data?: any, headers?: Object, options?: RequestInit}} opts
+   * @param {{url?: string, data?: any, body?: any, headers?: Object, options?: RequestInit}} opts
    * @returns {Promise<Response>}
    */
   patch(opts = {}) {
@@ -412,6 +418,7 @@ class uFetch {
       opts.data,
       opts.headers,
       opts.options,
+      opts.body,
     );
   }
 
@@ -423,7 +430,7 @@ class uFetch {
 
   /**
    * Orders to clear / destroy a resource tuple pointed at by `url` by sending a "DELETE" verb.
-   * @param {{url?: string, data?: any, headers?: Object, options?: RequestInit}} opts
+   * @param {{url?: string, data?: any, body?: any, headers?: Object, options?: RequestInit}} opts
    * @returns {Promise<Response>}
    */
   delete(opts = {}) {
@@ -433,6 +440,7 @@ class uFetch {
       opts.data,
       opts.headers,
       opts.options,
+      opts.body,
     );
   }
 
@@ -457,10 +465,10 @@ class uFetch {
    * The 'items' parameter must be an Array. Each element in the array is processed as a separate request and can be:
    * 1. A RAW PAYLOAD: A primitive value or a plain object without special keys (e.g. `{ edad: 12 }` or `"some-id"`).
    *    - It is automatically treated as the request `data` (sent as the request body or query string according to the HTTP method).
-   * 2. An OVERRIDE-CONFIG OBJECT: An object containing any of these special keys: `{ url, method, data, headers, options }`.
+   * 2. An OVERRIDE-CONFIG OBJECT: An object containing any of these special keys: `{ url, method, data, body, headers, options }`.
    *    - It merges with and overrides the base configuration parameters for that specific item's request (e.g. changing the endpoint or the method for a single item).
-   *    - When using this form, the actual payload to be sent must be placed inside the `data` key (e.g. `{ data: { edad: 12 }, url: "/special-endpoint", method: "POST" }`).
-   *    - If you pass an object with other keys (like `{ name: "Edwin", url: "/users" }`) and it doesn't have a `data` key, the entire object is treated as the payload (`data`) but the `url` (and other special keys) are extracted as overrides.
+   *    - When using this form, the query payload to be sent must be placed inside the `data` key, and the body payload inside the `body` key.
+   *    - If you pass an object with other keys (like `{ name: "Edwin", url: "/users" }`) and it doesn't have a `data` or `body` key, the entire object is treated as the payload (`data`) but the `url` (and other special keys) are extracted as overrides.
    * 
    * @param {Object} opts - Configuration options for the batch request.
    * @param {string} [opts.url] - (Optional) Base URL for requests (fallback). Should only be used when no URL was passed in the constructor, or if you explicitly want to change the URL defined in the constructor.
@@ -530,6 +538,7 @@ class uFetch {
           let reqUrl = url;
           let reqMethodVal = reqMethod;
           let reqData = item;
+          let reqBodyVal = undefined;
           let reqHeadersVal = reqHeaders;
           let reqOptionsVal = reqOptions;
 
@@ -537,11 +546,12 @@ class uFetch {
           if (
             typeof item === "object" &&
             item !== null &&
-            (item.url || item.method || item.hasOwnProperty("data") || item.headers || item.options)
+            (item.url || item.method || item.hasOwnProperty("data") || item.hasOwnProperty("body") || item.headers || item.options)
           ) {
             reqUrl = item.url || url;
             reqMethodVal = item.method || reqMethod;
-            reqData = item.hasOwnProperty("data") ? item.data : item;
+            reqData = item.hasOwnProperty("data") ? item.data : (item.hasOwnProperty("body") ? undefined : item);
+            reqBodyVal = item.hasOwnProperty("body") ? item.body : undefined;
             reqHeadersVal = item.headers ? { ...reqHeaders, ...item.headers } : reqHeaders;
             reqOptionsVal = item.options ? { ...reqOptions, ...item.options } : reqOptions;
           }
@@ -551,7 +561,8 @@ class uFetch {
             reqMethodVal,
             reqData,
             reqHeadersVal,
-            reqOptionsVal
+            reqOptionsVal,
+            reqBodyVal
           );
 
           const parser = responseParser || defaultResponseParser;

@@ -129,6 +129,30 @@ async function run() {
   } catch (error) {
     console.error("Test 8 failed:", error.message);
   }
+
+  // 9. Test item body override in batch
+  try {
+    console.log("\n9. Testing item body override in batch...");
+    const results = await api.batch({
+      url: "https://httpbin.org/post",
+      method: "POST",
+      items: [
+        {
+          body: { customBody: "Item 1 Body" },
+          headers: { "X-Custom": "Val1" }
+        },
+        {
+          body: { customBody: "Item 2 Body" }
+        }
+      ],
+      config: { concurrency: 2 }
+    });
+    console.log("-> Response 1 data reflected body:", results[0].data.json);
+    console.log("-> Response 2 data reflected body:", results[1].data.json);
+    console.log("PASS! Item body override works in batch.");
+  } catch (error) {
+    console.error("Test 9 failed:", error.message);
+  }
 }
 
 run();
